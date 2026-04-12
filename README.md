@@ -1,141 +1,136 @@
 # FiscoSmart — Inteligência Tributária Municipal
 
-Dashboard de análise, diagnóstico, previsão e priorização fiscal para municípios brasileiros.
+Sistema completo de análise fiscal para municípios brasileiros: detecta sonegação, prevê arrecadação e prioriza fiscalizações usando machine learning.
 
-🔗 **[Demo ao vivo no Streamlit Cloud](https://fiscosmart.streamlit.app)**
-
----
-
-## Tributos cobertos
-
-| Tributo | Tipo | Base Legal |
-|--------|------|-----------|
-| ISS | Imposto próprio | LC 116/2003 + LC 214/2025 |
-| IPTU | Imposto próprio | CTN art. 32 |
-| ITBI | Imposto próprio | CTN art. 35 |
-| Taxa de Alvará | Taxa | CTN art. 77 |
-| Taxa de Coleta de Lixo | Taxa | CTN art. 77 |
-| COSIP | Contribuição | CF art. 149-A |
-| Contribuição de Melhoria | Contribuição | CTN art. 81 |
-| FPM, ICMS, IPVA, ITR | Transferências | CF art. 158/159 |
+🔗 **[Abrir o dashboard ao vivo](https://fiscosmart.streamlit.app)**
+![CI](https://github.com/vinicius-souzaa/Projeto-FiscoSmart/actions/workflows/ci.yml/badge.svg)
 
 ---
 
-## Arquitetura
+## O problema que este projeto resolve
+
+Imagine que você é o Secretário de Finanças de um município com 8.000 contribuintes de ISS e apenas 6 auditores-fiscais disponíveis. Para quem você manda fiscalizar primeiro? Sem sistema, a resposta é baseada em intuição ou sorte.
+
+Com o FiscoSmart, a resposta é objetiva: um modelo de machine learning analisa o histórico de declarações de cada contribuinte, compara com a média do setor, e gera uma lista ordenada por probabilidade de irregularidade multiplicada pelo valor potencial de recuperação. O auditor vai direto para quem vai render mais.
+
+---
+
+## O que o sistema cobre
+
+| Tributo | O que é | Base legal |
+|---|---|---|
+| ISS | Imposto sobre serviços prestados no município | LC 116/2003 |
+| IPTU | Imposto sobre imóveis urbanos | CTN art. 32 |
+| ITBI | Imposto sobre venda de imóveis | CTN art. 35 |
+| Taxa de Alvará | Taxa para funcionar legalmente | CTN art. 77 |
+| Taxa de Lixo | Taxa de coleta de resíduos | CTN art. 77 |
+| COSIP | Contribuição para iluminação pública | CF art. 149-A |
+| Contribuição de Melhoria | Cobrança por obras que valorizam imóveis | CTN art. 81 |
+| FPM / ICMS / IPVA / ITR | Transferências da União e dos Estados | CF arts. 158-159 |
+| Dívida Ativa | Tributos vencidos em cobrança judicial | Lei 6.830/1980 |
+
+---
+
+## As 4 camadas de análise
+
+**1. Descritiva — O que aconteceu?**
+KPIs de todos os tributos, evolução mensal, comparação com metas, inadimplência por bairro. Painel para o Secretário de Finanças.
+
+**2. Diagnóstica — Por que aconteceu?**
+Identifica onde está o problema: qual setor está subnotificando, quais imóveis têm isenção suspeita, quais escrituras declararam valor abaixo do venal.
+
+**3. Preditiva — O que vai acontecer?**
+Score de risco por contribuinte (XGBoost + SHAP) e previsão de arrecadação para os próximos 6 meses (Prophet).
+
+**4. Prescritiva — O que fazer?**
+Ranking de priorização com simulador: "se eu fiscalizar os top 20, qual o potencial de recuperação?" Exporta lista de trabalho em CSV.
+
+---
+
+## Como o modelo de risco funciona
+
+O modelo analisa 13 indicadores de comportamento de cada contribuinte e aprende, a partir do histórico de autuações, quais padrões precedem irregularidades.
+
+Resultado validado: **AUC-ROC 0,96** — em 96% das comparações, o modelo coloca o contribuinte irregular com score maior que o regular.
+
+Além do score, o sistema usa **SHAP** para explicar cada decisão em linguagem do auditor:
+
+> "Score 87 porque: declara 58% abaixo do benchmark (+0,42), sem fiscalização há 38 meses (+0,31), omitiu declarações em 4 dos últimos 12 meses (+0,18)."
+
+---
+
+## Estrutura do repositório
 
 ```
 fiscosmart/
-├── src/
-│   ├── generate_data.py        # Dados sintéticos — todos os tributos
-│   ├── feature_engineering.py  # 13 features de risco por contribuinte
-│   ├── model_risk.py           # XGBoost + SHAP (AUC-ROC 0.96)
-│   ├── forecasting.py          # Prophet por tributo — 6 meses
-│   └── insights_engine.py      # Regras + Isolation Forest + linguagem natural
-├── app/
-│   ├── main.py                 # Entry point com auto-setup
-│   └── pages/
-│       ├── 1_Visao_Geral.py
-│       ├── 2_Diagnostico_ISS.py
-│       ├── 3_Diagnostico_IPTU.py
-│       ├── 4_Diagnostico_ITBI.py
-│       ├── 5_Taxas_COSIP.py
-│       ├── 6_Divida_Ativa.py
-│       ├── 7_Score_Risco.py
-│       ├── 8_Previsao_Arrecadacao.py
-│       └── 9_Priorizacao_Fiscal.py
-├── data/
-│   ├── raw/                    # Gerado automaticamente
-│   └── processed/              # Features, scores, forecasts, insights
-├── models/                     # Artefatos ML serializados
+├── app/                        # Dashboard Streamlit (9 páginas)
+├── src/                        # Pipeline analítica em Python
+├── data/                       # Dados gerados automaticamente
+├── models/                     # Artefatos ML (XGBoost + SHAP + Prophet)
+├── pipeline/                   # Engenharia de dados (roda local via Docker)
+│   ├── src/                    # Mesmos scripts src/ adaptados para o pipeline
+│   ├── dbt/                    # Transformações SQL em 3 camadas
+│   ├── airflow/dags/           # Orquestração mensal automatizada
+│   ├── docker-compose.yml      # Sobe PostgreSQL + Airflow
+│   └── README.md               # Explicação detalhada de cada ferramenta
 ├── .github/workflows/
 │   ├── ci.yml                  # Valida pipeline a cada push
-│   └── atualizacao_mensal.yml  # Regenera dados todo dia 1 do mês
+│   └── atualizacao_mensal.yml  # Roda pipeline todo dia 1 do mês
 ├── setup.py                    # Roda pipeline completa localmente
 └── requirements.txt
 ```
 
 ---
 
-## Pipeline
+## Como rodar
 
-```
-setup.py (local) ou GitHub Actions (automático)
-    │
-    ├── generate_data.py    → data/raw/        (ISS, IPTU, ITBI, Taxas, DA...)
-    ├── feature_engineering → data/processed/  (13 features por contribuinte)
-    ├── model_risk.py       → models/ + scores (XGBoost + SHAP)
-    ├── forecasting.py      → data/processed/  (Prophet × 4 tributos)
-    └── insights_engine.py  → data/processed/  (alertas automáticos)
-                                    │
-                              Streamlit Cloud
-                              9 páginas do dashboard
-```
-
-**Atualização automática:** GitHub Actions roda toda pipeline no dia 1 de cada mês,
-faz commit dos dados novos e o Streamlit Cloud redeployar automaticamente.
-
----
-
-## Camadas analíticas
-
-| Camada | Páginas | O que entrega |
-|--------|---------|---------------|
-| Descritiva | 1–6 | KPIs, evolução, inadimplência, aging |
-| Diagnóstica | 2–6 | Gap por setor, subavaliação, Pareto, radar |
-| Preditiva | 7–8 | Score XGBoost, SHAP individual, Prophet |
-| Prescritiva | 9 | Ranking retorno esperado, simulador, CSV |
-
----
-
-## Como rodar localmente
-
+**Só o dashboard:**
 ```bash
-# 1. Clonar
-git clone https://github.com/SEU_USUARIO/fiscosmart.git
-cd fiscosmart
-
-# 2. Instalar dependências
+git clone https://github.com/vinicius-souzaa/Projeto-FiscoSmart.git
+cd Projeto-FiscoSmart
 pip install -r requirements.txt
-
-# 3. Gerar dados e modelos (~2 min)
 python setup.py
-
-# 4. Iniciar dashboard
 streamlit run app/main.py
 ```
 
-## Deploy no Streamlit Cloud
+**Pipeline completa com Docker (Airflow + dbt + PostgreSQL):**
+```bash
+cd pipeline
+docker-compose up -d
+# Acesse: http://localhost:8080 (admin/admin)
+```
 
-1. Fork ou push para o GitHub
-2. Acesse [share.streamlit.io](https://share.streamlit.io)
-3. **Main file path:** `app/main.py`
-4. Deploy — o setup roda automaticamente na primeira abertura
+Ver detalhes em [`pipeline/README.md`](pipeline/README.md).
 
 ---
 
-## Stack
+## Atualização automática
 
-- **Analytics:** pandas, numpy, scikit-learn
-- **ML:** xgboost, shap
-- **Séries temporais:** prophet
-- **Visualização:** plotly
-- **Dashboard:** streamlit
-- **CI/CD:** GitHub Actions
-- **Deploy:** Streamlit Cloud
+O GitHub Actions roda toda a pipeline no dia 1 de cada mês, commita os dados atualizados, e o Streamlit Cloud redeployar automaticamente. Nenhuma ação manual necessária.
+
+---
+
+## Stack técnica
+
+| Categoria | Ferramenta | Por que |
+|---|---|---|
+| Dados | pandas, numpy, faker | Simula sistema tributário com benchmarks reais |
+| Transformações | dbt | SQL organizado em camadas testáveis |
+| Orquestração | Apache Airflow | Retry automático, histórico de execuções, dependências entre tasks |
+| ML | XGBoost + SHAP | Melhor performance em dados tabulares + explicabilidade |
+| Séries temporais | Prophet | Sazonalidade automática sem tuning manual |
+| Banco | PostgreSQL | Padrão para data warehousing |
+| Infraestrutura | Docker Compose | Ambiente reproduzível com um comando |
+| Dashboard | Streamlit | Python puro, sem separar frontend e backend |
+| CI/CD | GitHub Actions | Validação e atualização automática |
+| Deploy | Streamlit Cloud | Hospedagem gratuita para projetos públicos |
 
 ---
 
 ## Referências legais
 
-- CTN — Lei 5.172/1966
-- CF/88 — arts. 145, 149-A, 156, 158, 159
-- LC 116/2003 — ISS · LC 157/2016 — alíquota mínima ISS
-- LC 214/2025 — ISS na transição para IBS
-- EC 132/2023 — Reforma Tributária
-- Lei 6.830/1980 — Execução Fiscal
-- Lei 13.709/2018 — LGPD
-- Lei 4.729/1965 — Crimes de sonegação fiscal
+CTN (Lei 5.172/1966) · LC 116/2003 · LC 157/2016 · LC 214/2025 · EC 132/2023 · CF/88 arts. 145, 149-A, 156, 158-159 · Lei 6.830/1980 · Lei 13.709/2018 (LGPD) · Lei 4.729/1965
 
 ---
 
-Desenvolvido como projeto de portfólio — Data Analytics → Data Engineering.
+Desenvolvido por Vinicius — portfólio Data Analyst → Data Engineer · 2026

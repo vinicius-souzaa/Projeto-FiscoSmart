@@ -1,0 +1,31 @@
+name: 'fiscosmart'
+version: '1.0.0'
+config-version: 2
+
+profile: 'fiscosmart'
+
+model-paths: ["models"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+
+target-path: "target"
+clean-targets: ["target", "dbt_packages"]
+
+models:
+  fiscosmart:
+    staging:
+      +materialized: view
+      +schema: staging
+    intermediate:
+      +materialized: table
+      +schema: intermediate
+    marts:
+      +materialized: table
+      +schema: marts
+
+vars:
+  municipio: "São Vicente"
+  iss_aliquota_min: 0.02
+  iss_aliquota_max: 0.05
+  itbi_aliquota: 0.02
+  meses_analise: 12

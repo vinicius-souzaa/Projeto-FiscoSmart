@@ -1,0 +1,22 @@
+fiscosmart:
+  target: dev
+  outputs:
+    dev:
+      type: postgres
+      host: localhost
+      user: airflow
+      password: airflow
+      port: 5432
+      dbname: fiscosmart
+      schema: public
+      threads: 4
+      connect_timeout: 10
+    prod:
+      type: postgres
+      host: "{{ env_var('DB_HOST', 'localhost') }}"
+      user: "{{ env_var('DB_USER', 'airflow') }}"
+      password: "{{ env_var('DB_PASSWORD', 'airflow') }}"
+      port: "{{ env_var('DB_PORT', '5432') | int }}"
+      dbname: "{{ env_var('DB_NAME', 'fiscosmart') }}"
+      schema: public
+      threads: 4
