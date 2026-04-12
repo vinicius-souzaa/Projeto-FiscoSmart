@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+.env
+.venv
+venv/
+
+# Modelos grandes — regenerados pelo setup
+models/modelo_risco.pkl
+models/shap_explainer.pkl
+
+# Dados pesados — regenerados pelo setup
+data/raw/cosip.csv
+data/raw/iptu_parcelas.csv
+
+# IDEs
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db

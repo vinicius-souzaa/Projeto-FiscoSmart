@@ -1,0 +1,401 @@
+id_acao,id_contribuinte,cnae,porte,data_acao,tipo_acao,irregularidade_confirmada,valor_autuado,resultado,meses_sem_fiscalizacao_antes
+1,1861,6201-5,MEI,2024-12-16,Notificação Prévia,1,0.0,Irregular s/ autuação,33
+2,354,5620-1,MEI,2023-08-03,Auditoria Fiscal,1,0.0,Irregular s/ autuação,15
+3,1334,8630-5,MEI,2025-12-25,Notificação Prévia,0,0.0,Regular,14
+4,906,8599-6,EPP,2023-11-30,Auto de Infração,0,0.0,Regular,29
+5,1290,7711-0,ME,2024-11-08,Ação Preventiva,0,0.0,Regular,7
+6,1274,9602-5,MEI,2024-05-04,Auditoria Fiscal,0,0.0,Regular,31
+7,939,5611-2,ME,2023-07-09,Notificação Prévia,0,0.0,Regular,18
+8,1732,6911-7,ME,2025-07-10,Auto de Infração,1,11810.58,Autuado,6
+9,66,8512-1,ME,2024-06-15,Auditoria Fiscal,0,0.0,Regular,29
+10,1324,8650-0,GR,2024-01-12,Auditoria Fiscal,1,0.0,Irregular s/ autuação,12
+11,57,8630-5,MD,2025-06-24,Notificação Prévia,0,0.0,Regular,21
+12,1293,4771-7,ME,2024-10-11,Auto de Infração,0,0.0,Regular,15
+13,1119,8630-5,MD,2024-02-27,Auto de Infração,0,0.0,Regular,6
+14,585,7490-1,MEI,2025-07-19,Ação Preventiva,0,0.0,Regular,13
+15,375,8512-1,MD,2025-03-25,Notificação Prévia,1,0.0,Irregular s/ autuação,11
+16,276,4771-7,ME,2026-01-29,Auditoria Fiscal,1,0.0,Irregular s/ autuação,36
+17,747,4330-4,MEI,2023-10-18,Auditoria Fiscal,0,0.0,Regular,7
+18,129,4120-4,MD,2024-12-25,Auto de Infração,0,0.0,Regular,46
+19,1647,6202-3,ME,2025-06-16,Notificação Prévia,1,0.0,Irregular s/ autuação,25
+20,1853,8512-1,MD,2024-07-21,Ação Preventiva,1,0.0,Irregular s/ autuação,30
+21,675,4330-4,GR,2024-07-19,Notificação Prévia,0,0.0,Regular,29
+22,1665,6911-7,MEI,2025-05-11,Auto de Infração,0,0.0,Regular,43
+23,1982,6920-6,MEI,2025-02-02,Ação Preventiva,1,0.0,Irregular s/ autuação,9
+24,1084,6911-7,ME,2023-11-05,Auto de Infração,0,0.0,Regular,7
+25,1923,4921-3,MEI,2023-09-30,Notificação Prévia,0,0.0,Regular,34
+26,100,8599-6,MD,2024-03-13,Auto de Infração,1,135150.44,Autuado,28
+27,1180,5620-1,ME,2023-06-06,Auto de Infração,0,0.0,Regular,31
+28,965,6201-5,ME,2023-09-05,Auditoria Fiscal,0,0.0,Regular,17
+29,793,8599-6,GR,2024-07-03,Auditoria Fiscal,0,0.0,Regular,39
+30,30,8650-0,MEI,2024-11-13,Ação Preventiva,0,0.0,Regular,43
+31,629,8599-6,MEI,2024-05-04,Notificação Prévia,0,0.0,Regular,39
+32,945,5620-1,EPP,2025-11-06,Ação Preventiva,1,0.0,Irregular s/ autuação,48
+33,573,8650-0,MEI,2024-04-07,Ação Preventiva,1,0.0,Irregular s/ autuação,20
+34,908,7490-1,MEI,2024-03-29,Notificação Prévia,0,0.0,Regular,42
+35,1081,4120-4,EPP,2026-02-24,Notificação Prévia,1,0.0,Irregular s/ autuação,39
+36,451,8599-6,MEI,2024-12-29,Ação Preventiva,1,0.0,Irregular s/ autuação,38
+37,1610,5620-1,EPP,2023-12-15,Auto de Infração,1,83097.38,Autuado,22
+38,1291,4921-3,MEI,2023-12-30,Auditoria Fiscal,1,0.0,Irregular s/ autuação,12
+39,1079,4771-7,MEI,2023-09-02,Ação Preventiva,0,0.0,Regular,33
+40,255,5611-2,MD,2024-08-04,Auto de Infração,1,165448.56,Autuado,6
+41,125,4120-4,GR,2024-06-17,Ação Preventiva,1,0.0,Irregular s/ autuação,46
+42,1928,5310-5,EPP,2024-03-31,Ação Preventiva,1,0.0,Irregular s/ autuação,28
+43,252,6911-7,MEI,2025-08-08,Ação Preventiva,1,0.0,Irregular s/ autuação,23
+44,586,4120-4,ME,2024-05-22,Notificação Prévia,1,0.0,Irregular s/ autuação,30
+45,1569,4771-7,EPP,2025-11-18,Notificação Prévia,0,0.0,Regular,8
+46,825,4771-7,EPP,2024-05-15,Auto de Infração,1,89127.75,Autuado,48
+47,508,5310-5,EPP,2024-08-16,Auto de Infração,1,29146.93,Autuado,42
+48,890,8512-1,MEI,2023-07-25,Notificação Prévia,1,0.0,Irregular s/ autuação,34
+49,71,4921-3,GR,2023-11-18,Notificação Prévia,0,0.0,Regular,17
+50,1609,5310-5,MEI,2024-01-26,Notificação Prévia,0,0.0,Regular,12
+51,1533,6920-6,ME,2025-02-23,Ação Preventiva,0,0.0,Regular,20
+52,248,8630-5,ME,2025-12-31,Auto de Infração,0,0.0,Regular,12
+53,1451,5310-5,MEI,2023-10-21,Ação Preventiva,1,0.0,Irregular s/ autuação,43
+54,213,5310-5,MEI,2024-04-08,Auditoria Fiscal,0,0.0,Regular,31
+55,910,5620-1,ME,2024-11-09,Ação Preventiva,0,0.0,Regular,29
+56,1742,4330-4,MEI,2026-02-22,Auditoria Fiscal,1,0.0,Irregular s/ autuação,34
+57,1245,7711-0,ME,2023-12-21,Auto de Infração,0,0.0,Regular,10
+58,1697,5310-5,MD,2025-05-11,Ação Preventiva,1,0.0,Irregular s/ autuação,20
+59,1183,4330-4,ME,2025-07-14,Ação Preventiva,0,0.0,Regular,26
+60,362,8512-1,MEI,2026-03-24,Ação Preventiva,0,0.0,Regular,25
+61,1474,9602-5,ME,2024-03-03,Auto de Infração,0,0.0,Regular,32
+62,679,5611-2,MD,2024-05-24,Auto de Infração,0,0.0,Regular,22
+63,1622,5620-1,ME,2024-08-02,Auto de Infração,1,35291.14,Autuado,35
+64,1090,5310-5,EPP,2025-03-14,Auditoria Fiscal,0,0.0,Regular,32
+65,1988,4330-4,MEI,2023-10-12,Auto de Infração,1,2926.54,Autuado,31
+66,1848,6920-6,MEI,2024-01-09,Auto de Infração,0,0.0,Regular,24
+67,988,8511-2,MEI,2025-08-30,Ação Preventiva,1,0.0,Irregular s/ autuação,14
+68,1513,6920-6,MEI,2025-01-11,Auto de Infração,0,0.0,Regular,18
+69,112,5620-1,MEI,2024-02-05,Ação Preventiva,0,0.0,Regular,22
+70,1488,8511-2,ME,2025-03-11,Notificação Prévia,0,0.0,Regular,7
+71,1454,4771-7,GR,2023-08-11,Notificação Prévia,0,0.0,Regular,34
+72,384,5310-5,EPP,2023-08-19,Ação Preventiva,1,0.0,Irregular s/ autuação,46
+73,1396,8511-2,EPP,2025-10-06,Notificação Prévia,1,0.0,Irregular s/ autuação,44
+74,1055,9311-5,MEI,2024-09-21,Notificação Prévia,0,0.0,Regular,22
+75,756,8650-0,EPP,2025-08-01,Auto de Infração,0,0.0,Regular,18
+76,325,7711-0,EPP,2025-11-21,Auto de Infração,0,0.0,Regular,25
+77,1624,8650-0,ME,2023-05-23,Notificação Prévia,1,0.0,Irregular s/ autuação,15
+78,788,5611-2,MEI,2025-03-22,Auto de Infração,0,0.0,Regular,34
+79,369,8511-2,ME,2025-12-14,Auto de Infração,1,2247.75,Autuado,17
+80,1820,4120-4,MEI,2025-10-06,Auditoria Fiscal,0,0.0,Regular,15
+81,70,8650-0,ME,2023-05-20,Ação Preventiva,0,0.0,Regular,35
+82,858,6201-5,MEI,2025-11-01,Notificação Prévia,1,0.0,Irregular s/ autuação,17
+83,1484,8650-0,EPP,2024-04-03,Ação Preventiva,0,0.0,Regular,14
+84,1556,6201-5,ME,2025-07-26,Auto de Infração,1,2587.91,Autuado,42
+85,1692,6911-7,MEI,2023-06-09,Ação Preventiva,0,0.0,Regular,33
+86,1475,6201-5,ME,2023-10-21,Notificação Prévia,0,0.0,Regular,20
+87,1799,5620-1,MEI,2023-08-30,Auto de Infração,0,0.0,Regular,34
+88,479,5611-2,ME,2023-07-11,Ação Preventiva,0,0.0,Regular,16
+89,282,6920-6,MEI,2026-01-12,Auto de Infração,0,0.0,Regular,11
+90,1648,6201-5,GR,2024-09-21,Notificação Prévia,0,0.0,Regular,47
+91,1557,4330-4,EPP,2023-09-19,Ação Preventiva,0,0.0,Regular,39
+92,1730,4771-7,EPP,2024-07-12,Notificação Prévia,0,0.0,Regular,9
+93,211,6202-3,EPP,2024-07-31,Ação Preventiva,0,0.0,Regular,19
+94,298,6201-5,MD,2024-11-08,Notificação Prévia,0,0.0,Regular,42
+95,1885,6201-5,MEI,2026-02-22,Notificação Prévia,0,0.0,Regular,35
+96,1834,8512-1,EPP,2025-02-09,Auto de Infração,0,0.0,Regular,42
+97,652,5310-5,MEI,2025-06-05,Notificação Prévia,0,0.0,Regular,17
+98,1234,9602-5,ME,2024-01-29,Auditoria Fiscal,0,0.0,Regular,39
+99,1503,7490-1,ME,2025-08-30,Auto de Infração,1,23557.49,Autuado,28
+100,1932,6202-3,ME,2023-06-25,Auditoria Fiscal,0,0.0,Regular,30
+101,917,8630-5,ME,2026-01-25,Notificação Prévia,1,0.0,Irregular s/ autuação,7
+102,994,8599-6,EPP,2025-12-31,Notificação Prévia,0,0.0,Regular,31
+103,430,6911-7,ME,2023-08-13,Auditoria Fiscal,0,0.0,Regular,35
+104,1371,5611-2,ME,2025-06-13,Notificação Prévia,0,0.0,Regular,16
+105,240,8630-5,GR,2026-03-17,Auto de Infração,0,0.0,Regular,47
+106,880,4921-3,MEI,2025-09-25,Auto de Infração,0,0.0,Regular,20
+107,621,8630-5,MD,2025-05-23,Auditoria Fiscal,1,0.0,Irregular s/ autuação,44
+108,257,7711-0,MD,2023-07-22,Notificação Prévia,1,0.0,Irregular s/ autuação,28
+109,612,4771-7,ME,2023-04-19,Ação Preventiva,1,0.0,Irregular s/ autuação,38
+110,545,8599-6,GR,2024-05-22,Notificação Prévia,0,0.0,Regular,47
+111,772,4771-7,ME,2024-12-30,Notificação Prévia,0,0.0,Regular,32
+112,1420,4921-3,EPP,2023-11-18,Auditoria Fiscal,0,0.0,Regular,39
+113,1042,4120-4,ME,2023-10-29,Ação Preventiva,1,0.0,Irregular s/ autuação,47
+114,1790,8511-2,EPP,2025-02-18,Auto de Infração,0,0.0,Regular,46
+115,760,4921-3,MEI,2023-10-08,Notificação Prévia,1,0.0,Irregular s/ autuação,34
+116,383,4921-3,MEI,2024-07-23,Auto de Infração,0,0.0,Regular,15
+117,1104,9311-5,MEI,2024-01-12,Notificação Prévia,1,0.0,Irregular s/ autuação,15
+118,974,9311-5,ME,2023-05-06,Auditoria Fiscal,0,0.0,Regular,8
+119,353,7490-1,MEI,2024-01-16,Notificação Prévia,1,0.0,Irregular s/ autuação,20
+120,1606,6201-5,MEI,2024-08-24,Auto de Infração,0,0.0,Regular,7
+121,1826,4921-3,EPP,2025-07-19,Auditoria Fiscal,0,0.0,Regular,11
+122,1037,8630-5,MEI,2024-02-23,Auto de Infração,1,1760.9,Autuado,29
+123,1108,5611-2,EPP,2025-12-21,Auditoria Fiscal,0,0.0,Regular,20
+124,495,4771-7,MEI,2025-03-31,Auto de Infração,1,4175.18,Autuado,6
+125,394,5620-1,ME,2024-03-01,Auto de Infração,1,19798.64,Autuado,10
+126,1547,6920-6,ME,2024-02-03,Auditoria Fiscal,1,0.0,Irregular s/ autuação,30
+127,465,5611-2,ME,2025-01-21,Auditoria Fiscal,0,0.0,Regular,18
+128,887,4921-3,MD,2025-05-27,Auto de Infração,1,175454.16,Autuado,8
+129,1194,7490-1,ME,2024-12-24,Ação Preventiva,1,0.0,Irregular s/ autuação,30
+130,367,4771-7,EPP,2026-01-26,Auto de Infração,1,110526.43,Autuado,45
+131,1894,4330-4,ME,2024-07-08,Auditoria Fiscal,0,0.0,Regular,45
+132,1874,8599-6,EPP,2023-07-05,Notificação Prévia,1,0.0,Irregular s/ autuação,17
+133,745,5611-2,ME,2023-07-17,Notificação Prévia,0,0.0,Regular,16
+134,530,5620-1,ME,2025-05-16,Notificação Prévia,0,0.0,Regular,6
+135,803,4120-4,MEI,2024-02-22,Ação Preventiva,0,0.0,Regular,26
+136,1224,9311-5,MEI,2024-10-03,Auto de Infração,0,0.0,Regular,42
+137,1979,5611-2,MD,2026-03-02,Auditoria Fiscal,0,0.0,Regular,12
+138,1906,5310-5,EPP,2025-07-24,Auto de Infração,0,0.0,Regular,41
+139,1700,6201-5,MEI,2026-01-28,Auto de Infração,0,0.0,Regular,48
+140,1545,7490-1,ME,2026-01-14,Auditoria Fiscal,0,0.0,Regular,35
+141,1314,8630-5,MEI,2025-08-22,Notificação Prévia,1,0.0,Irregular s/ autuação,6
+142,307,6911-7,ME,2023-06-04,Auditoria Fiscal,0,0.0,Regular,16
+143,1667,4120-4,MEI,2026-02-28,Notificação Prévia,0,0.0,Regular,24
+144,863,6911-7,EPP,2025-06-29,Notificação Prévia,0,0.0,Regular,22
+145,1567,7490-1,MD,2026-02-14,Auto de Infração,0,0.0,Regular,43
+146,531,4771-7,MD,2025-09-12,Notificação Prévia,0,0.0,Regular,37
+147,655,4921-3,MEI,2026-02-24,Notificação Prévia,0,0.0,Regular,9
+148,1260,9311-5,EPP,2026-01-27,Notificação Prévia,0,0.0,Regular,11
+149,234,5310-5,MEI,2024-06-07,Ação Preventiva,1,0.0,Irregular s/ autuação,28
+150,121,8511-2,MD,2023-07-09,Auditoria Fiscal,1,0.0,Irregular s/ autuação,23
+151,1698,7490-1,MD,2025-12-31,Notificação Prévia,1,0.0,Irregular s/ autuação,44
+152,950,4921-3,ME,2024-02-09,Notificação Prévia,1,0.0,Irregular s/ autuação,29
+153,618,9602-5,EPP,2024-06-10,Ação Preventiva,0,0.0,Regular,27
+154,1179,6202-3,MD,2024-10-17,Auditoria Fiscal,1,0.0,Irregular s/ autuação,29
+155,308,4921-3,MD,2025-11-22,Ação Preventiva,1,0.0,Irregular s/ autuação,20
+156,136,4921-3,EPP,2025-10-29,Ação Preventiva,0,0.0,Regular,46
+157,555,4330-4,EPP,2025-09-12,Auditoria Fiscal,0,0.0,Regular,33
+158,1674,5310-5,MEI,2024-06-21,Ação Preventiva,1,0.0,Irregular s/ autuação,14
+159,584,4771-7,EPP,2024-07-29,Auditoria Fiscal,0,0.0,Regular,21
+160,1641,4921-3,ME,2024-02-26,Auto de Infração,0,0.0,Regular,16
+161,671,4771-7,MEI,2026-03-24,Auto de Infração,0,0.0,Regular,37
+162,835,6202-3,MEI,2025-03-31,Notificação Prévia,1,0.0,Irregular s/ autuação,38
+163,110,4330-4,ME,2023-07-02,Notificação Prévia,0,0.0,Regular,42
+164,1165,8599-6,ME,2023-12-03,Auto de Infração,0,0.0,Regular,46
+165,1960,7490-1,EPP,2026-02-23,Auditoria Fiscal,1,0.0,Irregular s/ autuação,38
+166,1465,7711-0,EPP,2025-07-08,Auditoria Fiscal,0,0.0,Regular,44
+167,1729,9602-5,ME,2024-10-09,Ação Preventiva,1,0.0,Irregular s/ autuação,8
+168,1243,9602-5,ME,2025-10-05,Notificação Prévia,1,0.0,Irregular s/ autuação,35
+169,212,8650-0,MEI,2026-02-05,Auditoria Fiscal,0,0.0,Regular,36
+170,1768,8599-6,MEI,2023-09-10,Ação Preventiva,1,0.0,Irregular s/ autuação,21
+171,1121,6920-6,EPP,2026-01-13,Notificação Prévia,0,0.0,Regular,35
+172,680,4330-4,MEI,2024-04-16,Auto de Infração,0,0.0,Regular,22
+173,1951,4921-3,ME,2025-05-19,Notificação Prévia,0,0.0,Regular,47
+174,1839,5310-5,MEI,2026-02-17,Ação Preventiva,0,0.0,Regular,18
+175,412,8599-6,MEI,2026-03-02,Ação Preventiva,1,0.0,Irregular s/ autuação,23
+176,1325,9602-5,ME,2023-06-13,Notificação Prévia,0,0.0,Regular,45
+177,783,6201-5,EPP,2025-03-21,Notificação Prévia,0,0.0,Regular,26
+178,1346,4120-4,ME,2025-02-13,Ação Preventiva,0,0.0,Regular,44
+179,875,7711-0,EPP,2025-03-06,Auto de Infração,0,0.0,Regular,30
+180,1653,6911-7,MEI,2026-02-02,Auto de Infração,0,0.0,Regular,29
+181,1279,6920-6,ME,2025-03-26,Ação Preventiva,0,0.0,Regular,34
+182,786,6911-7,ME,2024-05-11,Auditoria Fiscal,0,0.0,Regular,34
+183,1819,7711-0,MD,2025-05-12,Notificação Prévia,0,0.0,Regular,10
+184,1199,6911-7,MEI,2025-02-22,Auto de Infração,0,0.0,Regular,48
+185,808,6202-3,MEI,2025-09-22,Notificação Prévia,0,0.0,Regular,13
+186,713,8511-2,GR,2025-08-27,Auto de Infração,1,151099.92,Autuado,18
+187,1991,8511-2,EPP,2024-02-20,Auto de Infração,0,0.0,Regular,28
+188,1660,6201-5,EPP,2024-02-26,Ação Preventiva,1,0.0,Irregular s/ autuação,6
+189,1191,4330-4,EPP,2024-07-25,Auditoria Fiscal,1,0.0,Irregular s/ autuação,28
+190,1226,5620-1,MEI,2023-06-22,Ação Preventiva,0,0.0,Regular,48
+191,603,4120-4,ME,2025-02-17,Auditoria Fiscal,0,0.0,Regular,10
+192,271,8511-2,GR,2026-02-11,Ação Preventiva,0,0.0,Regular,13
+193,1385,4771-7,ME,2025-11-21,Notificação Prévia,0,0.0,Regular,20
+194,232,7490-1,EPP,2024-11-20,Ação Preventiva,0,0.0,Regular,41
+195,50,5611-2,MEI,2026-02-12,Ação Preventiva,1,0.0,Irregular s/ autuação,14
+196,463,6201-5,ME,2026-01-24,Auto de Infração,1,4903.53,Autuado,28
+197,1106,7711-0,EPP,2023-12-30,Notificação Prévia,1,0.0,Irregular s/ autuação,44
+198,856,7711-0,MEI,2023-10-13,Auto de Infração,0,0.0,Regular,40
+199,694,7490-1,EPP,2025-01-27,Notificação Prévia,1,0.0,Irregular s/ autuação,23
+200,1552,8599-6,MD,2024-05-09,Notificação Prévia,0,0.0,Regular,23
+201,1873,7490-1,MEI,2024-05-27,Notificação Prévia,0,0.0,Regular,29
+202,527,8512-1,MD,2025-05-29,Auditoria Fiscal,0,0.0,Regular,23
+203,174,7711-0,ME,2026-02-08,Auto de Infração,0,0.0,Regular,9
+204,721,6911-7,GR,2023-05-24,Auto de Infração,0,0.0,Regular,14
+205,415,4921-3,EPP,2023-09-07,Auditoria Fiscal,1,0.0,Irregular s/ autuação,39
+206,238,7711-0,ME,2024-01-04,Auditoria Fiscal,1,0.0,Irregular s/ autuação,32
+207,1473,6202-3,EPP,2024-04-05,Auditoria Fiscal,0,0.0,Regular,6
+208,1336,4120-4,ME,2024-06-19,Notificação Prévia,0,0.0,Regular,25
+209,1064,8511-2,ME,2026-03-06,Ação Preventiva,0,0.0,Regular,37
+210,24,5310-5,MEI,2025-10-22,Auto de Infração,0,0.0,Regular,21
+211,1767,9602-5,MEI,2026-01-03,Notificação Prévia,1,0.0,Irregular s/ autuação,43
+212,64,8512-1,EPP,2024-02-01,Ação Preventiva,1,0.0,Irregular s/ autuação,40
+213,290,6201-5,ME,2025-10-27,Notificação Prévia,0,0.0,Regular,18
+214,189,7711-0,EPP,2025-07-24,Notificação Prévia,1,0.0,Irregular s/ autuação,9
+215,702,5310-5,MEI,2024-05-13,Auditoria Fiscal,1,0.0,Irregular s/ autuação,26
+216,1815,8599-6,EPP,2023-07-18,Auto de Infração,1,17821.84,Autuado,18
+217,1138,8630-5,GR,2025-10-06,Ação Preventiva,1,0.0,Irregular s/ autuação,22
+218,355,5310-5,MEI,2025-11-14,Ação Preventiva,1,0.0,Irregular s/ autuação,7
+219,417,5611-2,MEI,2025-08-29,Notificação Prévia,0,0.0,Regular,10
+220,1246,6201-5,MEI,2024-06-15,Ação Preventiva,0,0.0,Regular,7
+221,931,6911-7,EPP,2024-11-06,Auto de Infração,1,157435.83,Autuado,19
+222,197,5620-1,ME,2024-02-14,Auto de Infração,0,0.0,Regular,24
+223,580,5310-5,MD,2025-06-10,Auto de Infração,0,0.0,Regular,13
+224,1135,8599-6,MEI,2024-10-27,Ação Preventiva,0,0.0,Regular,35
+225,1814,7711-0,MEI,2024-03-16,Ação Preventiva,1,0.0,Irregular s/ autuação,13
+226,1935,7711-0,EPP,2023-11-09,Notificação Prévia,0,0.0,Regular,28
+227,434,4921-3,MEI,2024-07-04,Auto de Infração,0,0.0,Regular,35
+228,101,7490-1,ME,2025-07-16,Ação Preventiva,1,0.0,Irregular s/ autuação,31
+229,1655,6201-5,ME,2024-02-07,Ação Preventiva,0,0.0,Regular,19
+230,395,4771-7,ME,2024-08-14,Ação Preventiva,1,0.0,Irregular s/ autuação,32
+231,1939,9602-5,MEI,2025-06-25,Notificação Prévia,1,0.0,Irregular s/ autuação,14
+232,221,5620-1,MEI,2023-06-05,Auditoria Fiscal,1,0.0,Irregular s/ autuação,25
+233,1676,7490-1,MEI,2025-04-15,Auditoria Fiscal,0,0.0,Regular,9
+234,1498,4771-7,MEI,2024-08-11,Auto de Infração,1,4507.22,Autuado,9
+235,1785,5620-1,EPP,2026-01-15,Auto de Infração,1,38285.91,Autuado,21
+236,345,9311-5,EPP,2023-05-02,Notificação Prévia,0,0.0,Regular,45
+237,1028,5611-2,EPP,2023-05-26,Auditoria Fiscal,0,0.0,Regular,13
+238,889,8650-0,EPP,2024-07-18,Auto de Infração,0,0.0,Regular,32
+239,1351,7711-0,ME,2025-05-16,Auto de Infração,1,46613.42,Autuado,43
+240,553,5620-1,GR,2023-07-07,Auto de Infração,0,0.0,Regular,20
+241,744,6201-5,ME,2025-12-01,Auditoria Fiscal,1,0.0,Irregular s/ autuação,6
+242,1542,4330-4,MEI,2024-08-22,Auditoria Fiscal,0,0.0,Regular,45
+243,539,7490-1,ME,2025-04-27,Auto de Infração,1,10524.94,Autuado,27
+244,907,4771-7,MEI,2023-12-30,Auto de Infração,0,0.0,Regular,24
+245,1395,6201-5,GR,2024-06-12,Ação Preventiva,0,0.0,Regular,31
+246,116,6920-6,EPP,2024-10-13,Notificação Prévia,0,0.0,Regular,15
+247,830,4921-3,ME,2025-01-27,Auto de Infração,1,18462.78,Autuado,47
+248,1938,8650-0,MEI,2026-03-07,Auto de Infração,0,0.0,Regular,26
+249,809,8512-1,GR,2025-03-20,Ação Preventiva,1,0.0,Irregular s/ autuação,30
+250,1311,6911-7,EPP,2024-02-27,Auto de Infração,1,198749.89,Autuado,15
+251,1005,7490-1,MEI,2025-10-02,Notificação Prévia,0,0.0,Regular,40
+252,306,4120-4,MEI,2025-10-11,Auditoria Fiscal,1,0.0,Irregular s/ autuação,36
+253,1101,6920-6,GR,2024-12-05,Auditoria Fiscal,0,0.0,Regular,39
+254,480,7490-1,MEI,2024-11-03,Auditoria Fiscal,0,0.0,Regular,25
+255,1424,4771-7,EPP,2023-08-01,Notificação Prévia,1,0.0,Irregular s/ autuação,39
+256,1076,5620-1,MEI,2024-12-13,Ação Preventiva,1,0.0,Irregular s/ autuação,31
+257,571,4921-3,EPP,2026-02-23,Auto de Infração,0,0.0,Regular,9
+258,619,9602-5,MD,2025-07-02,Notificação Prévia,0,0.0,Regular,16
+259,1898,8512-1,MEI,2023-04-13,Auto de Infração,1,3714.81,Autuado,37
+260,1266,8650-0,EPP,2024-03-28,Ação Preventiva,1,0.0,Irregular s/ autuação,27
+261,79,5620-1,EPP,2024-11-06,Notificação Prévia,1,0.0,Irregular s/ autuação,35
+262,1912,6920-6,EPP,2024-04-24,Notificação Prévia,0,0.0,Regular,36
+263,33,4921-3,MEI,2023-08-31,Ação Preventiva,1,0.0,Irregular s/ autuação,40
+264,1538,5611-2,ME,2023-10-07,Notificação Prévia,1,0.0,Irregular s/ autuação,39
+265,1034,6202-3,MEI,2024-05-31,Notificação Prévia,0,0.0,Regular,27
+266,1563,4330-4,EPP,2024-02-25,Auditoria Fiscal,1,0.0,Irregular s/ autuação,11
+267,352,6201-5,MEI,2025-07-10,Auto de Infração,0,0.0,Regular,24
+268,164,4330-4,ME,2023-12-22,Notificação Prévia,1,0.0,Irregular s/ autuação,39
+269,204,9311-5,ME,2023-12-11,Auditoria Fiscal,1,0.0,Irregular s/ autuação,20
+270,1054,8512-1,MD,2025-12-25,Auditoria Fiscal,1,0.0,Irregular s/ autuação,17
+271,1365,8650-0,MEI,2025-04-10,Notificação Prévia,0,0.0,Regular,26
+272,1967,4921-3,ME,2025-08-12,Ação Preventiva,0,0.0,Regular,47
+273,496,4120-4,EPP,2025-11-24,Auditoria Fiscal,1,0.0,Irregular s/ autuação,26
+274,1625,4921-3,MD,2025-01-09,Notificação Prévia,1,0.0,Irregular s/ autuação,30
+275,1966,6920-6,MD,2024-04-06,Ação Preventiva,1,0.0,Irregular s/ autuação,12
+276,1963,6920-6,GR,2024-12-07,Notificação Prévia,0,0.0,Regular,18
+277,611,4921-3,GR,2026-02-08,Auditoria Fiscal,1,0.0,Irregular s/ autuação,34
+278,433,6911-7,ME,2025-01-30,Auto de Infração,0,0.0,Regular,13
+279,1492,8511-2,EPP,2023-05-12,Auditoria Fiscal,0,0.0,Regular,17
+280,219,4330-4,MEI,2024-12-03,Ação Preventiva,1,0.0,Irregular s/ autuação,40
+281,1931,7711-0,EPP,2024-11-21,Ação Preventiva,0,0.0,Regular,15
+282,1466,6911-7,ME,2025-06-28,Ação Preventiva,0,0.0,Regular,25
+283,631,8650-0,MEI,2025-08-06,Auditoria Fiscal,0,0.0,Regular,32
+284,1382,8650-0,ME,2024-05-26,Auditoria Fiscal,0,0.0,Regular,11
+285,1302,5310-5,EPP,2023-08-31,Auditoria Fiscal,0,0.0,Regular,32
+286,60,5611-2,MD,2024-01-24,Auditoria Fiscal,0,0.0,Regular,37
+287,299,9311-5,EPP,2024-02-14,Auto de Infração,0,0.0,Regular,40
+288,1711,5611-2,EPP,2025-09-04,Auto de Infração,0,0.0,Regular,27
+289,74,6920-6,ME,2024-12-19,Auto de Infração,0,0.0,Regular,22
+290,163,6920-6,GR,2023-10-26,Notificação Prévia,1,0.0,Irregular s/ autuação,44
+291,1275,5310-5,ME,2026-03-23,Ação Preventiva,0,0.0,Regular,23
+292,1594,8650-0,ME,2026-03-05,Auto de Infração,0,0.0,Regular,47
+293,1434,6911-7,ME,2026-01-19,Notificação Prévia,0,0.0,Regular,6
+294,1613,7490-1,MEI,2024-04-04,Auto de Infração,1,2380.21,Autuado,33
+295,592,7711-0,ME,2025-11-28,Notificação Prévia,1,0.0,Irregular s/ autuação,20
+296,317,6201-5,ME,2025-02-11,Auto de Infração,0,0.0,Regular,16
+297,46,8630-5,MEI,2026-04-07,Ação Preventiva,1,0.0,Irregular s/ autuação,18
+298,1720,6201-5,MD,2024-03-04,Notificação Prévia,1,0.0,Irregular s/ autuação,28
+299,1832,8512-1,MEI,2023-08-17,Auto de Infração,1,962.73,Autuado,16
+300,428,8650-0,MEI,2024-10-18,Auditoria Fiscal,1,0.0,Irregular s/ autuação,6
+301,582,8512-1,MEI,2024-07-12,Ação Preventiva,1,0.0,Irregular s/ autuação,11
+302,77,6920-6,MEI,2025-12-24,Ação Preventiva,0,0.0,Regular,31
+303,1917,4330-4,EPP,2025-03-26,Notificação Prévia,0,0.0,Regular,37
+304,1415,9602-5,ME,2024-12-23,Ação Preventiva,0,0.0,Regular,34
+305,781,8511-2,ME,2025-07-16,Ação Preventiva,0,0.0,Regular,46
+306,1920,6911-7,MD,2023-08-21,Notificação Prévia,1,0.0,Irregular s/ autuação,38
+307,1174,8511-2,EPP,2023-12-12,Ação Preventiva,0,0.0,Regular,21
+308,1320,8512-1,GR,2026-01-15,Notificação Prévia,1,0.0,Irregular s/ autuação,34
+309,938,4771-7,EPP,2026-02-02,Auto de Infração,0,0.0,Regular,47
+310,31,5310-5,ME,2024-09-10,Auditoria Fiscal,0,0.0,Regular,43
+311,1092,8650-0,MEI,2024-02-18,Auto de Infração,0,0.0,Regular,28
+312,1616,6920-6,ME,2025-08-23,Notificação Prévia,0,0.0,Regular,48
+313,1230,6202-3,ME,2025-07-06,Ação Preventiva,0,0.0,Regular,15
+314,975,9602-5,MEI,2023-07-24,Notificação Prévia,0,0.0,Regular,6
+315,1085,4330-4,EPP,2023-07-30,Auditoria Fiscal,1,0.0,Irregular s/ autuação,25
+316,515,8650-0,MEI,2024-06-17,Ação Preventiva,0,0.0,Regular,23
+317,1551,8650-0,MEI,2025-08-16,Auto de Infração,0,0.0,Regular,23
+318,1568,8511-2,MEI,2025-10-08,Auto de Infração,1,350.72,Autuado,40
+319,1811,6911-7,EPP,2025-02-28,Notificação Prévia,0,0.0,Regular,38
+320,1574,5620-1,MD,2024-10-19,Auto de Infração,0,0.0,Regular,15
+321,45,4330-4,MD,2023-11-19,Auditoria Fiscal,0,0.0,Regular,31
+322,1687,8599-6,MEI,2024-04-30,Notificação Prévia,1,0.0,Irregular s/ autuação,22
+323,169,4120-4,MD,2023-09-24,Notificação Prévia,0,0.0,Regular,16
+324,304,6911-7,MEI,2024-07-25,Ação Preventiva,0,0.0,Regular,24
+325,991,5620-1,MEI,2024-07-10,Ação Preventiva,0,0.0,Regular,46
+326,556,5611-2,EPP,2026-02-04,Ação Preventiva,0,0.0,Regular,10
+327,1925,8630-5,EPP,2026-03-21,Notificação Prévia,0,0.0,Regular,45
+328,608,6911-7,EPP,2025-04-03,Auto de Infração,0,0.0,Regular,29
+329,1619,4771-7,MEI,2024-05-02,Ação Preventiva,1,0.0,Irregular s/ autuação,21
+330,758,5611-2,MEI,2024-01-26,Ação Preventiva,0,0.0,Regular,43
+331,439,6911-7,EPP,2024-05-11,Auto de Infração,0,0.0,Regular,6
+332,583,7711-0,MEI,2024-03-04,Ação Preventiva,0,0.0,Regular,34
+333,1519,7711-0,ME,2024-10-05,Auto de Infração,0,0.0,Regular,16
+334,528,6920-6,GR,2024-01-06,Ação Preventiva,0,0.0,Regular,14
+335,343,8511-2,MD,2025-12-19,Notificação Prévia,0,0.0,Regular,46
+336,1737,5620-1,ME,2025-03-08,Auto de Infração,1,7755.99,Autuado,21
+337,368,6920-6,ME,2024-07-30,Auditoria Fiscal,0,0.0,Regular,48
+338,186,6911-7,MEI,2024-08-30,Auditoria Fiscal,0,0.0,Regular,10
+339,1117,4330-4,MD,2024-09-21,Auto de Infração,1,143113.24,Autuado,14
+340,1755,6202-3,EPP,2025-01-22,Auto de Infração,1,32240.95,Autuado,7
+341,1426,5310-5,EPP,2024-05-07,Notificação Prévia,0,0.0,Regular,6
+342,301,4120-4,MEI,2023-11-23,Auditoria Fiscal,0,0.0,Regular,43
+343,1904,6911-7,ME,2024-08-22,Notificação Prévia,0,0.0,Regular,41
+344,833,6920-6,GR,2025-10-08,Ação Preventiva,1,0.0,Irregular s/ autuação,12
+345,544,8512-1,ME,2024-09-18,Ação Preventiva,1,0.0,Irregular s/ autuação,27
+346,1601,9311-5,ME,2025-12-30,Auditoria Fiscal,0,0.0,Regular,38
+347,351,8512-1,ME,2025-06-14,Ação Preventiva,0,0.0,Regular,12
+348,1933,4771-7,MEI,2024-05-23,Auto de Infração,0,0.0,Regular,16
+349,1511,6202-3,MEI,2023-05-07,Auto de Infração,0,0.0,Regular,31
+350,979,8630-5,ME,2025-08-06,Ação Preventiva,0,0.0,Regular,36
+351,176,8511-2,ME,2025-06-17,Ação Preventiva,0,0.0,Regular,13
+352,483,5620-1,MEI,2025-05-29,Auto de Infração,1,1122.4,Autuado,35
+353,1413,8630-5,MEI,2023-05-08,Notificação Prévia,1,0.0,Irregular s/ autuação,47
+354,1611,8512-1,ME,2025-09-17,Ação Preventiva,0,0.0,Regular,27
+355,124,4771-7,ME,2023-06-18,Auditoria Fiscal,1,0.0,Irregular s/ autuação,44
+356,600,8650-0,EPP,2024-09-04,Auto de Infração,0,0.0,Regular,43
+357,1795,7490-1,MEI,2025-10-09,Auditoria Fiscal,1,0.0,Irregular s/ autuação,26
+358,1746,4120-4,MEI,2026-01-27,Auto de Infração,1,3806.41,Autuado,42
+359,1379,6202-3,ME,2025-05-29,Auto de Infração,1,12400.21,Autuado,22
+360,1186,5611-2,EPP,2025-03-03,Auto de Infração,0,0.0,Regular,44
+361,486,9602-5,EPP,2023-10-08,Auditoria Fiscal,1,0.0,Irregular s/ autuação,14
+362,332,7711-0,ME,2023-10-01,Auto de Infração,0,0.0,Regular,13
+363,789,6201-5,MEI,2026-01-29,Ação Preventiva,0,0.0,Regular,8
+364,195,6920-6,EPP,2025-04-02,Notificação Prévia,1,0.0,Irregular s/ autuação,26
+365,638,4771-7,ME,2025-12-06,Notificação Prévia,0,0.0,Regular,22
+366,472,6920-6,EPP,2024-10-22,Notificação Prévia,1,0.0,Irregular s/ autuação,28
+367,1714,8650-0,ME,2024-06-12,Auditoria Fiscal,1,0.0,Irregular s/ autuação,7
+368,323,8512-1,MEI,2025-07-02,Auditoria Fiscal,1,0.0,Irregular s/ autuação,6
+369,1197,4921-3,ME,2023-11-30,Ação Preventiva,1,0.0,Irregular s/ autuação,46
+370,267,6202-3,GR,2025-08-30,Auditoria Fiscal,0,0.0,Regular,6
+371,1544,8511-2,ME,2024-01-09,Ação Preventiva,0,0.0,Regular,13
+372,1804,4120-4,EPP,2025-11-24,Auditoria Fiscal,1,0.0,Irregular s/ autuação,43
+373,68,4921-3,MD,2024-02-17,Auditoria Fiscal,1,0.0,Irregular s/ autuação,11
+374,1738,6202-3,EPP,2025-03-14,Auto de Infração,1,52558.67,Autuado,29
+375,1593,7711-0,ME,2024-05-14,Auditoria Fiscal,0,0.0,Regular,8
+376,1564,4330-4,EPP,2026-01-04,Ação Preventiva,0,0.0,Regular,12
+377,481,6202-3,MEI,2024-02-02,Notificação Prévia,1,0.0,Irregular s/ autuação,30
+378,1757,7711-0,GR,2025-06-13,Auto de Infração,1,894905.25,Autuado,39
+379,1913,6201-5,MEI,2025-12-19,Ação Preventiva,1,0.0,Irregular s/ autuação,41
+380,1441,4120-4,MEI,2024-05-05,Ação Preventiva,1,0.0,Irregular s/ autuação,29
+381,1461,8630-5,MEI,2023-06-29,Auto de Infração,0,0.0,Regular,42
+382,888,4771-7,EPP,2025-04-04,Notificação Prévia,0,0.0,Regular,8
+383,423,7490-1,MEI,2023-12-13,Notificação Prévia,1,0.0,Irregular s/ autuação,20
+384,1675,9602-5,MEI,2025-06-02,Ação Preventiva,0,0.0,Regular,48
+385,1450,8511-2,ME,2026-02-15,Ação Preventiva,1,0.0,Irregular s/ autuação,45
+386,765,6911-7,EPP,2024-08-07,Auto de Infração,0,0.0,Regular,18
+387,520,9602-5,MEI,2024-08-18,Ação Preventiva,0,0.0,Regular,10
+388,1432,9311-5,GR,2023-10-08,Notificação Prévia,0,0.0,Regular,8
+389,614,4771-7,ME,2025-10-30,Auto de Infração,0,0.0,Regular,21
+390,1531,6920-6,MEI,2024-02-21,Auto de Infração,0,0.0,Regular,25
+391,1783,4330-4,ME,2024-05-20,Ação Preventiva,0,0.0,Regular,17
+392,1659,5310-5,ME,2026-01-28,Auto de Infração,0,0.0,Regular,37
+393,454,5620-1,EPP,2024-03-23,Auto de Infração,0,0.0,Regular,45
+394,731,7711-0,ME,2025-11-09,Auditoria Fiscal,0,0.0,Regular,15
+395,535,4330-4,ME,2024-10-29,Auditoria Fiscal,0,0.0,Regular,31
+396,966,7711-0,ME,2025-11-22,Auto de Infração,0,0.0,Regular,10
+397,1285,5620-1,EPP,2023-10-14,Auto de Infração,1,26400.15,Autuado,7
+398,1740,4771-7,ME,2024-07-02,Ação Preventiva,0,0.0,Regular,22
+399,262,9602-5,GR,2023-08-09,Ação Preventiva,0,0.0,Regular,30
+400,536,6201-5,MEI,2025-01-24,Auto de Infração,1,3900.05,Autuado,15

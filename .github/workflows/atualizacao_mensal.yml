@@ -1,0 +1,55 @@
+name: Atualização Mensal de Dados
+
+on:
+  schedule:
+    - cron: '0 6 1 * *'   # todo dia 1 do mês às 06h UTC
+  workflow_dispatch:        # permite rodar manualmente pela aba Actions
+
+jobs:
+  atualizar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Instalar dependências
+        run: pip install -r requirements.txt
+
+      - name: Rodar pipeline
+        run: python setup.py
+
+      - name: Validar modelo
+        run: |
+          python -c "
+          import joblib, sys
+          m = joblib.load('models/metricas_modelo.pkl')
+          print(f'AUC-ROC: {m[\"auc_roc\"]}')
+          if m['auc_roc'] < 0.75:
+              print('AVISO: AUC abaixo de 0.75'); sys.exit(1)
+          print('Modelo OK.')
+          "
+
+      - name: Commit e push
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add \
+            data/raw/ \
+            data/processed/ \
+            models/metricas_modelo.pkl
+
+          if git diff --cached --quiet; then
+            echo "Nenhuma mudança — nada para commitar."
+          else
+            MES=$(date +'%Y-%m')
+            git commit -m "chore(data): atualização automática — $MES"
+            git push
+          fi

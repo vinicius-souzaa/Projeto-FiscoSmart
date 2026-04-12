@@ -1,0 +1,46 @@
+name: CI — Validação do Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  validar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Instalar dependências
+        run: pip install -r requirements.txt
+
+      - name: Rodar pipeline completa
+        run: python setup.py
+
+      - name: Validar artefatos e qualidade do modelo
+        run: |
+          python -c "
+          import os, sys, joblib
+          required = [
+            'data/processed/features_risco.csv',
+            'data/processed/scores_risco.csv',
+            'data/processed/shap_values.csv',
+            'data/processed/forecast_arrecadacao.csv',
+            'data/processed/insights_latest.json',
+            'models/modelo_risco.pkl',
+          ]
+          missing = [f for f in required if not os.path.exists(f)]
+          if missing:
+              print('ERRO:', missing); sys.exit(1)
+          m = joblib.load('models/metricas_modelo.pkl')
+          print(f'AUC-ROC: {m[\"auc_roc\"]} | F1: {m[\"f1\"]}')
+          assert m['auc_roc'] >= 0.75, f'AUC-ROC {m[\"auc_roc\"]} abaixo do mínimo'
+          print('Pipeline OK.')
+          "
