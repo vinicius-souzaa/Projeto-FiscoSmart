@@ -2,12 +2,14 @@ name: Atualização Mensal de Dados
 
 on:
   schedule:
-    - cron: '0 6 1 * *'   # todo dia 1 do mês às 06h UTC
-  workflow_dispatch:        # permite rodar manualmente pela aba Actions
+    - cron: '0 6 1 * *'   # dia 1 do mês às 06h UTC
+  workflow_dispatch:        # permite rodar manualmente
 
 jobs:
   atualizar:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
+
     steps:
       - uses: actions/checkout@v4
         with:
@@ -22,21 +24,22 @@ jobs:
       - name: Instalar dependências
         run: pip install -r requirements.txt
 
-      - name: Rodar pipeline
+      - name: Rodar pipeline completa
         run: python setup.py
 
-      - name: Validar modelo
+      - name: Validar modelo pós-atualização
         run: |
-          python -c "
+          python - << 'EOF'
           import joblib, sys
-          m = joblib.load('models/metricas_modelo.pkl')
-          print(f'AUC-ROC: {m[\"auc_roc\"]}')
-          if m['auc_roc'] < 0.75:
-              print('AVISO: AUC abaixo de 0.75'); sys.exit(1)
-          print('Modelo OK.')
-          "
+          m = joblib.load("models/metricas_modelo.pkl")
+          print(f"AUC-ROC: {m['auc_roc']} | Recall: {m['recall']} | F1: {m['f1']}")
+          if m["auc_roc"] < 0.75:
+              print(f"AVISO: AUC-ROC {m['auc_roc']} abaixo de 0.75 — revisão recomendada")
+              sys.exit(1)
+          print("✓ Modelo OK")
+          EOF
 
-      - name: Commit e push
+      - name: Commit e push dos dados atualizados
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -47,7 +50,7 @@ jobs:
             models/metricas_modelo.pkl
 
           if git diff --cached --quiet; then
-            echo "Nenhuma mudança — nada para commitar."
+            echo "Nenhuma mudança detectada — nada a commitar."
           else
             MES=$(date +'%Y-%m')
             git commit -m "chore(data): atualização automática — $MES"

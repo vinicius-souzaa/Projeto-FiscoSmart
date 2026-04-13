@@ -1,9 +1,9 @@
 pandas>=2.2.0
-numpy>=1.26.0
+numpy>=1.26.0,<2.0
 faker>=24.0.0
 scikit-learn>=1.4.0
 xgboost>=2.0.3
-shap>=0.44.1
+shap>=0.44.1,<0.46
 prophet>=1.1.5
 plotly>=5.18.0
 streamlit>=1.31.0

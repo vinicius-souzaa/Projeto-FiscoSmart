@@ -2,13 +2,15 @@ name: CI — Validação do Pipeline
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   validar:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
+
     steps:
       - uses: actions/checkout@v4
 
@@ -24,23 +26,77 @@ jobs:
       - name: Rodar pipeline completa
         run: python setup.py
 
-      - name: Validar artefatos e qualidade do modelo
+      - name: Validar artefatos gerados
         run: |
-          python -c "
-          import os, sys, joblib
-          required = [
-            'data/processed/features_risco.csv',
-            'data/processed/scores_risco.csv',
-            'data/processed/shap_values.csv',
-            'data/processed/forecast_arrecadacao.csv',
-            'data/processed/insights_latest.json',
-            'models/modelo_risco.pkl',
+          python - << 'EOF'
+          import os, sys, joblib, json
+
+          artefatos = [
+            "data/raw/contribuintes.csv",
+            "data/raw/declaracoes_iss.csv",
+            "data/raw/imoveis.csv",
+            "data/raw/cosip_mensal.csv",
+            "data/processed/features_risco.csv",
+            "data/processed/scores_risco.csv",
+            "data/processed/shap_values.csv",
+            "data/processed/forecast_arrecadacao.csv",
+            "data/processed/insights_latest.json",
+            "models/modelo_risco.pkl",
+            "models/metricas_modelo.pkl",
           ]
-          missing = [f for f in required if not os.path.exists(f)]
-          if missing:
-              print('ERRO:', missing); sys.exit(1)
-          m = joblib.load('models/metricas_modelo.pkl')
-          print(f'AUC-ROC: {m[\"auc_roc\"]} | F1: {m[\"f1\"]}')
-          assert m['auc_roc'] >= 0.75, f'AUC-ROC {m[\"auc_roc\"]} abaixo do mínimo'
-          print('Pipeline OK.')
-          "
+          faltando = [f for f in artefatos if not os.path.exists(f)]
+          if faltando:
+              print("ERRO — artefatos ausentes:"); [print(f"  {f}") for f in faltando]
+              sys.exit(1)
+          print("✓ Todos os artefatos presentes")
+          EOF
+
+      - name: Validar qualidade do modelo
+        run: |
+          python - << 'EOF'
+          import joblib, sys
+
+          m = joblib.load("models/metricas_modelo.pkl")
+          print(f"AUC-ROC: {m['auc_roc']} | Recall: {m['recall']} | F1: {m['f1']}")
+          print(f"Bins — Médio≥{m['bin_medio']} | Alto≥{m['bin_alto']}")
+
+          if m["auc_roc"] < 0.75:
+              print(f"FALHA: AUC-ROC {m['auc_roc']} abaixo do mínimo aceitável (0.75)")
+              sys.exit(1)
+          if m["recall"] < 0.50:
+              print(f"FALHA: Recall {m['recall']} abaixo do mínimo aceitável (0.50)")
+              sys.exit(1)
+          print("✓ Modelo dentro dos critérios de qualidade")
+          EOF
+
+      - name: Validar integridade dos dados
+        run: |
+          python - << 'EOF'
+          import pandas as pd, sys
+
+          # ISS: sem negativos
+          iss = pd.read_csv("data/raw/declaracoes_iss.csv")
+          assert (iss["gap_absoluto"] >= 0).all(), "gap_absoluto negativo no ISS"
+          assert iss["competencia"].nunique() == 36, f"Esperado 36 competências, encontrado {iss['competencia'].nunique()}"
+
+          # Scores: distribuição saudável
+          sc = pd.read_csv("data/processed/scores_risco.csv")
+          dist = sc["faixa_risco"].value_counts(normalize=True)
+          assert dist.get("Baixo", 0) < 0.90, "Mais de 90% em Baixo — bins podem estar descalibrados"
+          assert dist.get("Alto", 0) > 0.03, "Menos de 3% em Alto — bins podem estar descalibrados"
+          print(f"✓ Distribuição: Baixo={dist.get('Baixo',0)*100:.1f}% | "
+                f"Médio={dist.get('Médio',0)*100:.1f}% | Alto={dist.get('Alto',0)*100:.1f}%")
+
+          # COSIP mensal: 144 linhas (36 meses x 4 faixas)
+          cosip = pd.read_csv("data/raw/cosip_mensal.csv")
+          assert len(cosip) == 144, f"cosip_mensal: esperado 144 linhas, encontrado {len(cosip)}"
+
+          # Insights: deve ter pelo menos 1 insight de alta severidade
+          import json
+          with open("data/processed/insights_latest.json") as f:
+              ins = json.load(f)
+          altas = [i for i in ins if i.get("severidade") == "alta"]
+          assert len(altas) >= 1, "Nenhum insight de alta severidade gerado"
+          print(f"✓ Dados validados — {len(ins)} insights ({len(altas)} alta severidade)")
+          print("✓ Pipeline OK")
+          EOF
