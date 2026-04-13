@@ -10,7 +10,7 @@ Sistema end-to-end de análise fiscal para municípios brasileiros: detecta sone
 
 ## O problema que este projeto resolve
 
-Um município de médio porte tem entre 5.000 e 15.000 contribuintes de ISS e, em geral, menos de 10 auditores-fiscais disponíveis por mês. Para quem fiscalizar primeiro? Sem sistema, a resposta é intuição. Com FiscoSmart, é matemática.
+Um município de pequeno porte tem entre 5.000 e 15.000 contribuintes de ISS e, em geral, menos de 10 auditores-fiscais disponíveis por mês. Para quem fiscalizar primeiro? Sem sistema, a resposta é intuição. Com FiscoSmart, é matemática.
 
 O sistema combina três fontes de informação: o histórico de declarações de cada contribuinte, o benchmark médio do seu setor (CNAE), e o histórico de autuações anteriores. Um modelo XGBoost aprende quais padrões precedem irregularidades e gera um score de risco de 0 a 100 para cada contribuinte. A lista de priorização multiplica esse score pelo valor potencial de recuperação e divide pelo custo estimado da fiscalização — o resultado é um ranking por retorno esperado. O auditor vai direto para quem vai render mais.
 
