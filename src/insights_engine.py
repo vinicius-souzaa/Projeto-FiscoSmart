@@ -8,6 +8,7 @@ FIX v2:
 """
 import pandas as pd
 import numpy as np
+from datetime import date, timedelta
 import os, json
 from sklearn.ensemble import IsolationForest
 
@@ -159,9 +160,88 @@ class InsightsEngine:
             "contribuintes_anomalos": anomalos["id_contribuinte"].tolist(),
         }]
 
+
+    def insight_prazo_da(self) -> list[dict]:
+        """
+        Contribuintes com competência vencida entre 60 e 89 dias sem pagamento:
+        a menos de 30 dias de serem inscritos em dívida ativa automaticamente.
+        Alerta o auditor para agir antes do processo judicial.
+        """
+        pag_path = os.path.join(DATA_RAW, 'pagamentos_iss.csv')
+        if not os.path.exists(pag_path):
+            return []
+
+        try:
+            pag = pd.read_csv(pag_path, usecols=['id_contribuinte','competencia','status'])
+        except Exception:
+            return []
+
+        ja_pagou = set(
+            zip(pag[pag['status'].isin(['pago','pago_atraso'])]['id_contribuinte'].astype(int),
+                pag['competencia'])
+        )
+
+        # Chaves já em DA para não duplicar alerta
+        da_chaves = set()
+        if len(self.da) > 0:
+            da_iss = self.da[(self.da['tipo_tributo']=='ISS') & self.da['id_contribuinte'].notna()]
+            da_chaves = set(zip(da_iss['id_contribuinte'].astype(int), da_iss['competencia_origem']))
+
+        hoje = date.today()
+        alertas = []
+
+        for comp in self.decl['competencia'].unique():
+            ano, mes = int(comp[:4]), int(comp[5:7])
+            mes_v = mes + 1; ano_v = ano + (mes_v > 12); mes_v = mes_v % 12 or 12
+            try:
+                venc = date(ano_v, mes_v, 15)
+            except ValueError:
+                continue
+
+            dias_vencido = (hoje - venc).days
+            if not (60 <= dias_vencido <= 89):
+                continue
+
+            dias_para_da = 90 - dias_vencido
+            decl_comp = self.decl[self.decl['competencia'] == comp]
+
+            pendentes = decl_comp[
+                ~decl_comp['id_contribuinte'].isin(
+                    [c for c, cp in ja_pagou if cp == comp]
+                ) &
+                ~decl_comp['id_contribuinte'].isin(
+                    [c for c, cp in da_chaves if cp == comp]
+                )
+            ]
+
+            if len(pendentes) == 0:
+                continue
+
+            valor_em_risco = pendentes['iss_devido_estimado'].sum()
+            alertas.append({
+                'tipo': 'prazo_da',
+                'severidade': 'alta' if dias_para_da <= 10 else 'media',
+                'titulo': f"Competência {comp} entra em DA em {dias_para_da} dia(s)",
+                'texto': (
+                    f"{len(pendentes)} contribuintes da competência {comp} ainda não pagaram. "
+                    f"O prazo de tolerância vence em {dias_para_da} dia(s) (dia {venc + timedelta(days=90)}). "
+                    f"Valor em risco de inscrição em dívida ativa: {_fmt(valor_em_risco)}. "
+                    f"Ação: notificação extrajudicial imediata para evitar execução fiscal."
+                ),
+                'valor_impacto': round(valor_em_risco, 2),
+                'competencia': comp,
+                'dias_para_da': dias_para_da,
+                'n_contribuintes': len(pendentes),
+            })
+
+        # Ordenar por urgência (menos dias primeiro)
+        alertas.sort(key=lambda x: x['dias_para_da'])
+        return alertas
+
     def todos_insights(self) -> list[dict]:
         insights = (
-            self.insight_gap_setor()
+            self.insight_prazo_da()
+            + self.insight_gap_setor()
             + self.insight_omissoes_consecutivas()
             + self.insight_queda_arrecadacao_anomala()
             + self.insight_inadimplencia_bairro()

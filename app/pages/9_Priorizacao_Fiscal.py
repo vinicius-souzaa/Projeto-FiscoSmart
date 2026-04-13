@@ -48,8 +48,8 @@ st.info(
 )
 
 # Montar ranking
-df = scores.merge(feats[["id_contribuinte","taxa_omissao","cv_receita",
-                          "meses_sem_fiscalizacao","gap_vs_bench_pct"]], on="id_contribuinte", how="left")
+cols_so_feats = [c for c in feats.columns if c not in scores.columns and c != "id_contribuinte"]
+df = scores.merge(feats[["id_contribuinte"] + cols_so_feats], on="id_contribuinte", how="left")
 custo_map = {"MEI":500,"ME":1200,"EPP":2500,"MD":5000,"GR":12000}
 aliq_map  = {
     "6201-5":0.03,"6202-3":0.03,"7490-1":0.03,"8599-6":0.02,"5611-2":0.03,
@@ -67,15 +67,13 @@ df["retorno_esperado"] = (
 ) / df["custo_fisc"].clip(lower=100)
 
 ult_fisc = (acoes.groupby("id_contribuinte")["data_acao"].max()
-    .reset_index().rename(columns={"data_acao":"ultima_fiscalizacao"}))
+    .reset_index().rename(columns={"data_acao":"_ult_data"}))
 df = df.merge(ult_fisc, on="id_contribuinte", how="left")
-df["ultima_fiscalizacao"] = df["ultima_fiscalizacao"].fillna("Nunca fiscalizado")
-# FIX: trazer dados de contato para o auditor conseguir agir sobre a lista
-df = df.merge(
-    contribs[["id_contribuinte","razao_social","cnpj","email","telefone"]],
-    on="id_contribuinte", how="left"
-)
+df["ultima_fiscalizacao"] = df["_ult_data"].fillna("Nunca fiscalizado")
+df = df.drop(columns=["_ult_data"], errors="ignore")
 
+if "razao_social" not in df.columns:
+    df = df.merge(contribs[["id_contribuinte","razao_social","cnpj","email","telefone"]], on="id_contribuinte", how="left")
 ranking = df.sort_values("retorno_esperado", ascending=False).reset_index(drop=True)
 ranking["posicao"] = ranking.index + 1
 
@@ -85,9 +83,16 @@ with st.expander("⚙️ Filtros", expanded=True):
     c1,c2,c3,c4 = st.columns(4)
     with c1: faixa_sel = st.multiselect("Faixa de risco", ["Alto","Médio","Baixo"], default=["Alto","Médio"])
     with c2: porte_sel = st.multiselect("Porte", sorted(df["porte"].unique()), default=list(df["porte"].unique()))
-    with c3: cnae_f = st.selectbox("CNAE", ["Todos"] + sorted(df["cnae"].unique().tolist()))
+    with c3: cnae_f = st.selectbox("CNAE / Setor", ["Todos"] + sorted(df["cnae"].unique().tolist()), help="Distribua entre auditores por especialidade")
     with c4: score_min = st.slider("Score mínimo", 0, 100, 40)
+    c5, c6 = st.columns(2)
+    with c5: bairro_f = st.selectbox("Bairro / Região", ["Todos"] + sorted(df["bairro"].dropna().unique().tolist()), help="Região de responsabilidade do auditor")
+    with c6:
+        st.caption("Estado de trabalho")
+        mostrar_agendados = st.checkbox("Ocultar já agendados", value=False)
 
+if "agendados" not in st.session_state:
+    st.session_state["agendados"] = set()
 filt = ranking[
     ranking["faixa_risco"].astype(str).isin(faixa_sel) &
     ranking["porte"].isin(porte_sel) &
@@ -95,6 +100,10 @@ filt = ranking[
 ].copy()
 if cnae_f != "Todos":
     filt = filt[filt["cnae"]==cnae_f]
+if bairro_f != "Todos":
+    filt = filt[filt["bairro"]==bairro_f]
+if mostrar_agendados and st.session_state["agendados"]:
+    filt = filt[~filt["id_contribuinte"].isin(st.session_state["agendados"])]
 
 c1,c2,c3,c4 = st.columns(4)
 c1.metric("Contribuintes selecionados", f"{len(filt):,}")
@@ -206,17 +215,32 @@ st.dataframe(t_show.rename(columns={
     "ultima_fiscalizacao":"Última Fisc."}),
     use_container_width=True, height=380)
 
-# Download
+# MELHORIA 5: marcar como agendado
 st.markdown("---")
+with st.expander("✓ Agendar fiscalização", expanded=False):
+    ids_disp  = top_n["id_contribuinte"].tolist()
+    nomes_disp= top_n["razao_social"].fillna(top_n["id_contribuinte"].astype(str)).tolist()
+    opcoes    = [f"{int(i)} — {n}" for i, n in zip(ids_disp, nomes_disp)]
+    selecionados = st.multiselect("Selecione para marcar como 'Em fiscalização'", opcoes)
+    col_btn1, col_btn2 = st.columns(2)
+    with col_btn1:
+        if st.button("Marcar selecionados"):
+            for s in selecionados:
+                st.session_state["agendados"].add(int(s.split(" — ")[0]))
+            st.success(f"{len(selecionados)} marcado(s). Total: {len(st.session_state['agendados'])}")
+    with col_btn2:
+        if st.button("Limpar agendamentos") and st.session_state["agendados"]:
+            st.session_state["agendados"] = set()
+            st.rerun()
+
 col_e1, col_e2 = st.columns(2)
 with col_e1:
-    # FIX: exportar campos de contato para o auditor conseguir notificar
-    cols_export = ["posicao","razao_social","cnpj","cnae","porte","bairro",
-                   "email","telefone","score_risco","faixa_risco",
-                   "valor_potencial","custo_fisc","ultima_fiscalizacao"]
-    cols_export = [c for c in cols_export if c in top_n.columns]
+    cols_exp = ["posicao","razao_social","cnpj","cnae","porte","bairro",
+                "email","telefone","score_risco","faixa_risco",
+                "valor_potencial","custo_fisc","ultima_fiscalizacao"]
+    cols_exp = [c for c in cols_exp if c in top_n.columns]
     buf = io.StringIO()
-    top_n[cols_export].to_csv(buf, index=False)
+    top_n[cols_exp].to_csv(buf, index=False)
     st.download_button(
         f"⬇️ Baixar lista de trabalho (top {n_sel}) — CSV",
         buf.getvalue(),
