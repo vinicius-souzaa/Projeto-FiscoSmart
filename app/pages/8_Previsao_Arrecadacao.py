@@ -72,12 +72,24 @@ fig.add_scatter(
 )
 
 # Linha divisória histórico/previsão
-# FIX: converter Timestamp para string ISO — plotly 3.14+ não aceita Timestamp direto
+# FIX: add_vline está quebrado com eixo de datas no Plotly/Python 3.14
+# Substituído por add_shape + add_annotation que não tem esse bug
 if len(historico) > 0:
-    fig.add_vline(
-        x=str(historico["ds"].max()),
-        line_dash="dot", line_color="#888",
-        annotation_text="Hoje", annotation_position="top",
+    x_corte = str(historico["ds"].max())
+    fig.add_shape(
+        type="line",
+        x0=x_corte, x1=x_corte,
+        y0=0, y1=1,
+        xref="x", yref="paper",
+        line=dict(dash="dot", color="#888", width=1.5),
+    )
+    fig.add_annotation(
+        x=x_corte, y=1,
+        xref="x", yref="paper",
+        text="Hoje",
+        showarrow=False,
+        yanchor="bottom",
+        font=dict(size=11, color="#888"),
     )
 
 fig.update_layout(
