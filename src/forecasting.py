@@ -88,10 +88,10 @@ def gerar_serie_itbi():
 
 
 def gerar_serie_cosip():
-    cosip = pd.read_csv(f"{DATA_RAW}/cosip.csv")
+    # FIX: cosip.csv nao esta commitado — usa cosip_mensal.csv (pre-agregado, 144 linhas)
+    cosip = pd.read_csv(f"{DATA_RAW}/cosip_mensal.csv")
     serie = (
-        cosip[cosip["adimplente"] == 1]
-        .groupby("competencia")["valor_pago"]
+        cosip.groupby("competencia")["valor_pago"]
         .sum()
         .reset_index()
         .rename(columns={"competencia": "ds", "valor_pago": "y"})
