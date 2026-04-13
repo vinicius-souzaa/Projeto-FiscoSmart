@@ -163,10 +163,13 @@ with col_s2:
     cid_sel = st.number_input("ID do Contribuinte", min_value=1, max_value=2000, value=1)
     cd_c = df[df["id_contribuinte"]==cid_sel]
     if len(cd_c) > 0:
+        # FIX: std() retorna NaN com serie de 1 ponto — usar fillna(0)
+        std_rec = cd_c["receita_declarada"].std() if len(cd_c) > 1 else 0
+        mean_rec = cd_c["receita_declarada"].mean()
         metrics = {
             "Gap vs. Benchmark": min(100, cd_c["gap_percentual"].mean()),
             "Taxa de Omissão (%)": cd_c["omitiu_declaracao"].mean()*100,
-            "Variab. Receita": min(100, cd_c["receita_declarada"].std()/(cd_c["receita_declarada"].mean()+1)*100),
+            "Variab. Receita": min(100, (std_rec/(mean_rec+1))*100) if mean_rec > 0 else 0,
             "Taxa Retificação (%)": cd_c["retificou"].mean()*100,
             "Meses sem Dados (%)": (cd_c["receita_declarada"]==0).mean()*100,
             "Score Global": min(100, cd_c["gap_percentual"].mean() * 0.8),

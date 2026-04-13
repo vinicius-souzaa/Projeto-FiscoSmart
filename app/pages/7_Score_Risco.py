@@ -24,10 +24,11 @@ def load():
     shap_v   = pd.read_csv(f"{DATA_PROC}/shap_values.csv")
     feats    = pd.read_csv(f"{DATA_PROC}/features_risco.csv")
     metricas = joblib.load(f"{MODELS_DIR}/metricas_modelo.pkl")
-    return scores, shap_v, feats, metricas
+    contribs = pd.read_csv(f"{DATA_RAW}/contribuintes.csv")
+    return scores, shap_v, feats, metricas, contribs
 
 try:
-    scores, shap_v, feats, metricas = load()
+    scores, shap_v, feats, metricas, contribs = load()
 except FileNotFoundError:
     st.error("Execute `setup.py` primeiro para gerar os scores.")
     st.stop()
@@ -186,10 +187,22 @@ if len(sc_row) > 0 and len(sh_row) > 0:
             f"**Score:** <span style='color:{cor};font-size:1.6rem;font-weight:700'>"
             f"{score_val:.0f}/100</span> — Faixa: **{faixa}**",
             unsafe_allow_html=True)
-        st.markdown(
-            f"CNAE: `{sc_row.iloc[0]['cnae']}` · "
-            f"Porte: {sc_row.iloc[0]['porte']} · "
-            f"Bairro: {sc_row.iloc[0]['bairro']}")
+        # FIX: mostrar dados de identificação para o auditor
+        cinfo = contribs[contribs["id_contribuinte"]==cid]
+        if len(cinfo) > 0:
+            ci = cinfo.iloc[0]
+            st.markdown(f"**{ci['razao_social']}** · CNPJ: `{ci['cnpj']}`")
+            st.markdown(
+                f"CNAE: `{sc_row.iloc[0]['cnae']}` · "
+                f"Porte: {sc_row.iloc[0]['porte']} · "
+                f"Bairro: {sc_row.iloc[0]['bairro']} · "
+                f"Regime: {sc_row.iloc[0]['regime_tributario']}")
+            st.caption(f"Contato: {ci['email']} · {ci['telefone']}")
+        else:
+            st.markdown(
+                f"CNAE: `{sc_row.iloc[0]['cnae']}` · "
+                f"Porte: {sc_row.iloc[0]['porte']} · "
+                f"Bairro: {sc_row.iloc[0]['bairro']}")
 
     shap_ind = sh_row[shap_cols].iloc[0]
     shap_df = pd.DataFrame({"feature":shap_ind.index,"shap":shap_ind.values})

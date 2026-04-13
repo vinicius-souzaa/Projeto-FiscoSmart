@@ -38,11 +38,15 @@ st.info(
     "(FPM, ICMS, IPVA). Tudo consolidado aqui para o gestor ter a visão completa."
 )
 
-ano_sel = st.selectbox("Ano", sorted(decl["ano"].unique(), reverse=True))
+anos_completos = sorted(
+    set(decl["ano"].unique()) & set(transf["ano"].unique()), reverse=True
+)
+ano_sel = st.selectbox("Ano", anos_completos,
+    help="Apenas anos com dados históricos completos de todas as fontes.")
 
 iss_ano   = decl[decl["ano"]==ano_sel]["iss_recolhido"].sum()
 iss_ant   = decl[decl["ano"]==ano_sel-1]["iss_recolhido"].sum() if ano_sel > decl["ano"].min() else iss_ano
-iptu_ano  = imoveis["iptu_pago"].sum() / 3
+iptu_ano  = imoveis["iptu_pago"].sum()  # base cadastral total (imoveis.csv não tem coluna ano)
 itbi_ano  = itbi[itbi["ano"]==ano_sel]["itbi_recolhido"].sum()
 cosip_ano = cosip[cosip["adimplente"]==1]["valor_pago"].sum() / 3
 alv_ano   = alv[alv["ano"]==ano_sel]["valor_pago"].sum()
@@ -64,7 +68,7 @@ st.caption(
 c1,c2,c3,c4,c5 = st.columns(5)
 c1.metric("ISS",     _fmt(iss_ano),   f"{var_iss:+.1f}% vs ano anterior",
     help="Imposto Sobre Serviços — pago por empresas e autônomos. Ex: clínicas, escritórios, construtoras, academias.")
-c2.metric("IPTU",    _fmt(iptu_ano),  f"Inadimplência: {tx_inad:.1f}%",
+c2.metric("IPTU",    _fmt(iptu_ano),  f"Inadimplência: {tx_inad:.1f}% · base cadastral",
     help="Imposto Predial e Territorial Urbano — pago pelos donos de imóveis. Calculado sobre o valor venal registrado no cadastro da prefeitura.")
 c3.metric("ITBI",    _fmt(itbi_ano),  "Vendas de imóveis",
     help="Imposto sobre Transmissão de Bens Imóveis — cobrado a cada venda de imóvel. Alíquota de 2% sobre o valor da escritura.")
@@ -188,6 +192,9 @@ st.info(
     "**FUNDEB** = vinculado à educação."
 )
 t_pivot = transf[transf["ano"]==ano_sel].groupby("tipo_transferencia")["valor"].sum().reset_index()
-cols_t = st.columns(len(t_pivot))
-for i, (_, row) in enumerate(t_pivot.iterrows()):
-    cols_t[i].metric(row["tipo_transferencia"], _fmt(row["valor"]))
+if len(t_pivot) == 0:
+    st.info("Transferências constitucionais disponíveis apenas para os anos do histórico base (2022–2024).")
+else:
+    cols_t = st.columns(len(t_pivot))
+    for i, (_, row) in enumerate(t_pivot.iterrows()):
+        cols_t[i].metric(row["tipo_transferencia"], _fmt(row["valor"]))

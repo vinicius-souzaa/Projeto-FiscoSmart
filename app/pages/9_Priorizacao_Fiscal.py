@@ -48,14 +48,8 @@ st.info(
 )
 
 # Montar ranking
-# FIX: scores ja tem taxa_omissao, meses_sem_fiscalizacao e gap_vs_bench_pct
-# Merge so com cv_receita que nao existe em scores — evita colunas _x/_y
-cols_extras = [c for c in ["cv_receita"] if c not in scores.columns]
-if cols_extras:
-    df = scores.merge(feats[["id_contribuinte"] + cols_extras],
-                      on="id_contribuinte", how="left")
-else:
-    df = scores.copy()
+df = scores.merge(feats[["id_contribuinte","taxa_omissao","cv_receita",
+                          "meses_sem_fiscalizacao","gap_vs_bench_pct"]], on="id_contribuinte", how="left")
 custo_map = {"MEI":500,"ME":1200,"EPP":2500,"MD":5000,"GR":12000}
 aliq_map  = {
     "6201-5":0.03,"6202-3":0.03,"7490-1":0.03,"8599-6":0.02,"5611-2":0.03,
@@ -76,6 +70,11 @@ ult_fisc = (acoes.groupby("id_contribuinte")["data_acao"].max()
     .reset_index().rename(columns={"data_acao":"ultima_fiscalizacao"}))
 df = df.merge(ult_fisc, on="id_contribuinte", how="left")
 df["ultima_fiscalizacao"] = df["ultima_fiscalizacao"].fillna("Nunca fiscalizado")
+# FIX: trazer dados de contato para o auditor conseguir agir sobre a lista
+df = df.merge(
+    contribs[["id_contribuinte","razao_social","cnpj","email","telefone"]],
+    on="id_contribuinte", how="left"
+)
 
 ranking = df.sort_values("retorno_esperado", ascending=False).reset_index(drop=True)
 ranking["posicao"] = ranking.index + 1
@@ -189,11 +188,11 @@ try:
         top3[cid] = " · ".join([f"{k} ({v:+.2f})" for k,v in t3])
     top_n = top_n.copy()
     top_n["Top 3 Fatores"] = top_n["id_contribuinte"].map(top3).fillna("—")
-    cols_ex = ["posicao","id_contribuinte","cnae","porte","bairro",
+    cols_ex = ["posicao","razao_social","cnpj","cnae","porte","bairro",
                "score_risco","faixa_risco","valor_potencial","custo_fisc",
                "ultima_fiscalizacao","Top 3 Fatores"]
 except Exception:
-    cols_ex = ["posicao","id_contribuinte","cnae","porte","bairro",
+    cols_ex = ["posicao","razao_social","cnpj","cnae","porte","bairro",
                "score_risco","faixa_risco","valor_potencial","custo_fisc","ultima_fiscalizacao"]
 
 t_show = top_n[cols_ex].head(50).copy()
@@ -201,7 +200,8 @@ t_show["score_risco"]    = t_show["score_risco"].apply(lambda x: f"{x:.0f}")
 t_show["valor_potencial"] = t_show["valor_potencial"].apply(_fmt)
 t_show["custo_fisc"]     = t_show["custo_fisc"].apply(_fmt)
 st.dataframe(t_show.rename(columns={
-    "posicao":"#","faixa_risco":"Faixa","score_risco":"Score",
+    "posicao":"#","razao_social":"Razão Social","cnpj":"CNPJ",
+    "faixa_risco":"Faixa","score_risco":"Score",
     "valor_potencial":"Potencial","custo_fisc":"Custo Est.",
     "ultima_fiscalizacao":"Última Fisc."}),
     use_container_width=True, height=380)
@@ -210,8 +210,13 @@ st.dataframe(t_show.rename(columns={
 st.markdown("---")
 col_e1, col_e2 = st.columns(2)
 with col_e1:
+    # FIX: exportar campos de contato para o auditor conseguir notificar
+    cols_export = ["posicao","razao_social","cnpj","cnae","porte","bairro",
+                   "email","telefone","score_risco","faixa_risco",
+                   "valor_potencial","custo_fisc","ultima_fiscalizacao"]
+    cols_export = [c for c in cols_export if c in top_n.columns]
     buf = io.StringIO()
-    top_n.to_csv(buf, index=False)
+    top_n[cols_export].to_csv(buf, index=False)
     st.download_button(
         f"⬇️ Baixar lista de trabalho (top {n_sel}) — CSV",
         buf.getvalue(),
