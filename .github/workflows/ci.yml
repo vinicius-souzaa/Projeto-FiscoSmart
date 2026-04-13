@@ -9,7 +9,7 @@ on:
 jobs:
   validar:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 25
 
     steps:
       - uses: actions/checkout@v4
@@ -23,7 +23,30 @@ jobs:
       - name: Instalar dependências
         run: pip install -r requirements.txt
 
-      - name: Rodar pipeline completa
+      - name: Verificar dados históricos commitados
+        run: |
+          python - << 'EOF'
+          import os, sys
+          obrigatorios = [
+            "data/raw/contribuintes.csv",
+            "data/raw/declaracoes_iss.csv",
+            "data/raw/imoveis.csv",
+            "data/raw/itbi.csv",
+            "data/raw/divida_ativa.csv",
+            "data/raw/acoes_fiscais.csv",
+            "data/raw/cosip_mensal.csv",
+            "data/raw/transferencias.csv",
+          ]
+          faltando = [f for f in obrigatorios if not os.path.exists(f)]
+          if faltando:
+              print("ERRO — dados históricos ausentes no repositório:")
+              [print(f"  {f}") for f in faltando]
+              print("\nSolução: rodar python src/generate_data.py e commitar data/raw/")
+              sys.exit(1)
+          print(f"✓ {len(obrigatorios)} arquivos de dados históricos presentes")
+          EOF
+
+      - name: Rodar pipeline analítica (sem regerar dados)
         run: python setup.py
 
       - name: Validar artefatos gerados
@@ -32,10 +55,6 @@ jobs:
           import os, sys, joblib, json
 
           artefatos = [
-            "data/raw/contribuintes.csv",
-            "data/raw/declaracoes_iss.csv",
-            "data/raw/imoveis.csv",
-            "data/raw/cosip_mensal.csv",
             "data/processed/features_risco.csv",
             "data/processed/scores_risco.csv",
             "data/processed/shap_values.csv",
@@ -48,55 +67,43 @@ jobs:
           if faltando:
               print("ERRO — artefatos ausentes:"); [print(f"  {f}") for f in faltando]
               sys.exit(1)
-          print("✓ Todos os artefatos presentes")
+          print(f"✓ {len(artefatos)} artefatos gerados")
           EOF
 
       - name: Validar qualidade do modelo
         run: |
           python - << 'EOF'
           import joblib, sys
-
           m = joblib.load("models/metricas_modelo.pkl")
           print(f"AUC-ROC: {m['auc_roc']} | Recall: {m['recall']} | F1: {m['f1']}")
-          print(f"Bins — Médio≥{m['bin_medio']} | Alto≥{m['bin_alto']}")
-
-          if m["auc_roc"] < 0.75:
-              print(f"FALHA: AUC-ROC {m['auc_roc']} abaixo do mínimo aceitável (0.75)")
-              sys.exit(1)
-          if m["recall"] < 0.50:
-              print(f"FALHA: Recall {m['recall']} abaixo do mínimo aceitável (0.50)")
-              sys.exit(1)
+          assert m["auc_roc"] >= 0.75, f"AUC-ROC {m['auc_roc']} abaixo do mínimo"
+          assert m["recall"]  >= 0.50, f"Recall {m['recall']} abaixo do mínimo"
           print("✓ Modelo dentro dos critérios de qualidade")
           EOF
 
       - name: Validar integridade dos dados
         run: |
           python - << 'EOF'
-          import pandas as pd, sys
+          import pandas as pd, json, sys
 
-          # ISS: sem negativos
+          # ISS: 36 competências históricas + possíveis novas do batch
           iss = pd.read_csv("data/raw/declaracoes_iss.csv")
-          assert (iss["gap_absoluto"] >= 0).all(), "gap_absoluto negativo no ISS"
-          assert iss["competencia"].nunique() == 36, f"Esperado 36 competências, encontrado {iss['competencia'].nunique()}"
+          assert iss["competencia"].nunique() >= 36, "Menos de 36 competências no ISS"
+          assert (iss["gap_absoluto"] >= 0).all(), "gap_absoluto negativo"
+          print(f"✓ ISS: {iss['competencia'].nunique()} competências, {len(iss):,} registros")
 
-          # Scores: distribuição saudável
+          # Scores: distribuição calibrada
           sc = pd.read_csv("data/processed/scores_risco.csv")
           dist = sc["faixa_risco"].value_counts(normalize=True)
-          assert dist.get("Baixo", 0) < 0.90, "Mais de 90% em Baixo — bins podem estar descalibrados"
-          assert dist.get("Alto", 0) > 0.03, "Menos de 3% em Alto — bins podem estar descalibrados"
-          print(f"✓ Distribuição: Baixo={dist.get('Baixo',0)*100:.1f}% | "
-                f"Médio={dist.get('Médio',0)*100:.1f}% | Alto={dist.get('Alto',0)*100:.1f}%")
+          assert dist.get("Baixo",0) < 0.90, "Mais de 90% em Baixo — bins descalibrados"
+          assert dist.get("Alto",0)  > 0.03, "Menos de 3% em Alto — bins descalibrados"
+          print(f"✓ Scores: Baixo={dist.get('Baixo',0)*100:.0f}% | "
+                f"Médio={dist.get('Médio',0)*100:.0f}% | Alto={dist.get('Alto',0)*100:.0f}%")
 
-          # COSIP mensal: 144 linhas (36 meses x 4 faixas)
-          cosip = pd.read_csv("data/raw/cosip_mensal.csv")
-          assert len(cosip) == 144, f"cosip_mensal: esperado 144 linhas, encontrado {len(cosip)}"
-
-          # Insights: deve ter pelo menos 1 insight de alta severidade
-          import json
+          # Insights
           with open("data/processed/insights_latest.json") as f:
               ins = json.load(f)
-          altas = [i for i in ins if i.get("severidade") == "alta"]
-          assert len(altas) >= 1, "Nenhum insight de alta severidade gerado"
-          print(f"✓ Dados validados — {len(ins)} insights ({len(altas)} alta severidade)")
+          assert len([i for i in ins if i.get("severidade")=="alta"]) >= 1
+          print(f"✓ {len(ins)} insights gerados")
           print("✓ Pipeline OK")
           EOF

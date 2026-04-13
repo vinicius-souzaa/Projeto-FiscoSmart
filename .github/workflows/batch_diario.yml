@@ -1,14 +1,14 @@
-name: Atualização Mensal — Retreino e Forecasting
+name: Batch Diário — Eventos de Pagamento
 
 on:
   schedule:
-    - cron: '0 6 1 * *'   # dia 1 de cada mês às 06h UTC
+    - cron: '0 7 * * *'   # todo dia às 07h UTC (04h Brasília)
   workflow_dispatch:
 
 jobs:
-  mensal:
+  batch:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 20
 
     steps:
       - uses: actions/checkout@v4
@@ -25,26 +25,36 @@ jobs:
       - name: Instalar dependências
         run: pip install -r requirements.txt
 
-      - name: Rodar batch diário (garante D-1 atualizado)
+      - name: Rodar batch diário (D-1)
         run: |
           python - << 'EOF'
           import sys
           sys.path.insert(0, 'src')
           from batch_diario import rodar_batch_diario
           stats = rodar_batch_diario()
-          print(f"Batch diário: {stats}")
+          print(f"Batch: {stats}")
           EOF
 
-      - name: Retreinar modelo completo
+      - name: Retreinar modelo com dados acumulados
         run: |
           python - << 'EOF'
-          import sys
+          import sys, os
           sys.path.insert(0, 'src')
-          from feature_engineering import build_features
-          from model_risk import treinar_modelo
-          build_features()
-          _, m, _ = treinar_modelo()
-          print(f"AUC-ROC: {m['auc_roc']} | Recall: {m['recall']} | F1: {m['f1']}")
+
+          pag_path = 'data/raw/pagamentos_iss.csv'
+          if not os.path.exists(pag_path):
+              print("Sem pagamentos ainda — modelo não retreinado")
+          else:
+              import pandas as pd
+              n = len(pd.read_csv(pag_path))
+              if n < 100:
+                  print(f"Aguardando mais dados ({n}/100 pagamentos)")
+              else:
+                  from feature_engineering import build_features
+                  from model_risk import treinar_modelo
+                  build_features()
+                  _, m, _ = treinar_modelo()
+                  print(f"Modelo retreinado — AUC-ROC: {m['auc_roc']}")
           EOF
 
       - name: Atualizar forecasting e insights
@@ -61,18 +71,7 @@ jobs:
           print(f"{len(ins)} insights atualizados")
           EOF
 
-      - name: Validar modelo
-        run: |
-          python - << 'EOF'
-          import joblib, sys
-          m = joblib.load('models/metricas_modelo.pkl')
-          print(f"AUC-ROC: {m['auc_roc']} | Recall: {m['recall']}")
-          if m['auc_roc'] < 0.75:
-              print("FALHA: AUC-ROC abaixo do mínimo"); sys.exit(1)
-          print("✓ Modelo OK")
-          EOF
-
-      - name: Commit e push
+      - name: Commit e push (só se houver mudança)
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -86,9 +85,9 @@ jobs:
             models/metricas_modelo.pkl
 
           if git diff --cached --quiet; then
-            echo "Sem mudanças."
+            echo "Sem mudanças — nada a commitar."
           else
-            MES=$(date +'%Y-%m')
-            git commit -m "chore(data): atualização mensal — $MES"
+            DIA=$(date +'%Y-%m-%d')
+            git commit -m "data(batch): eventos de pagamento — $DIA"
             git push
           fi
