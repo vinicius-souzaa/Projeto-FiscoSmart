@@ -48,8 +48,14 @@ st.info(
 )
 
 # Montar ranking
-df = scores.merge(feats[["id_contribuinte","taxa_omissao","cv_receita",
-                          "meses_sem_fiscalizacao","gap_vs_bench_pct"]], on="id_contribuinte", how="left")
+# FIX: scores ja tem taxa_omissao, meses_sem_fiscalizacao e gap_vs_bench_pct
+# Merge so com cv_receita que nao existe em scores — evita colunas _x/_y
+cols_extras = [c for c in ["cv_receita"] if c not in scores.columns]
+if cols_extras:
+    df = scores.merge(feats[["id_contribuinte"] + cols_extras],
+                      on="id_contribuinte", how="left")
+else:
+    df = scores.copy()
 custo_map = {"MEI":500,"ME":1200,"EPP":2500,"MD":5000,"GR":12000}
 aliq_map  = {
     "6201-5":0.03,"6202-3":0.03,"7490-1":0.03,"8599-6":0.02,"5611-2":0.03,
