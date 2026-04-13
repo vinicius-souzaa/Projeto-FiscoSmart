@@ -72,9 +72,10 @@ fig.add_scatter(
 )
 
 # Linha divisória histórico/previsão
+# FIX: converter Timestamp para string ISO — plotly 3.14+ não aceita Timestamp direto
 if len(historico) > 0:
     fig.add_vline(
-        x=historico["ds"].max(),
+        x=str(historico["ds"].max()),
         line_dash="dot", line_color="#888",
         annotation_text="Hoje", annotation_position="top",
     )
