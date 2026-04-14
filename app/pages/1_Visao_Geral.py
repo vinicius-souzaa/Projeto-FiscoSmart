@@ -20,7 +20,7 @@ def load():
         pd.read_csv(f"{DATA_RAW}/declaracoes_iss.csv"),
         pd.read_csv(f"{DATA_RAW}/imoveis.csv"),
         pd.read_csv(f"{DATA_RAW}/itbi.csv"),
-        pd.read_csv(f"{DATA_RAW}/cosip.csv"),
+        pd.read_csv(f"{DATA_RAW}/cosip_mensal.csv"),   # FIX: usa fonte pré-agregada correta
         pd.read_csv(f"{DATA_RAW}/taxa_alvara.csv"),
         pd.read_csv(f"{DATA_RAW}/divida_ativa.csv"),
         pd.read_csv(f"{DATA_RAW}/transferencias.csv"),
@@ -48,7 +48,7 @@ iss_ano   = decl[decl["ano"]==ano_sel]["iss_recolhido"].sum()
 iss_ant   = decl[decl["ano"]==ano_sel-1]["iss_recolhido"].sum() if ano_sel > decl["ano"].min() else iss_ano
 iptu_ano  = imoveis["iptu_pago"].sum()  # base cadastral total (imoveis.csv não tem coluna ano)
 itbi_ano  = itbi[itbi["ano"]==ano_sel]["itbi_recolhido"].sum()
-cosip_ano = cosip[cosip["adimplente"]==1]["valor_pago"].sum() / 3
+cosip_ano = cosip[cosip["competencia"].str.startswith(str(ano_sel))]["valor_pago"].sum()
 alv_ano   = alv[alv["ano"]==ano_sel]["valor_pago"].sum()
 da_aberto = da["valor_total"].sum() - da["valor_recuperado"].sum()
 gap_total = decl[decl["ano"]==ano_sel]["gap_absoluto"].sum()
@@ -110,7 +110,7 @@ iss_m["tipo"]  = "ISS"; iss_m = iss_m.rename(columns={"iss_recolhido":"valor"})
 itbi_m = itbi.groupby("mes_competencia")["itbi_recolhido"].sum().reset_index()
 itbi_m = itbi_m.rename(columns={"mes_competencia":"competencia","itbi_recolhido":"valor"})
 itbi_m["tipo"] = "ITBI"
-cosip_m = cosip[cosip["adimplente"]==1].groupby("competencia")["valor_pago"].sum().reset_index()
+cosip_m = cosip.groupby("competencia")["valor_pago"].sum().reset_index()   # FIX: cosip_mensal já tem valor_pago agregado
 cosip_m = cosip_m.rename(columns={"valor_pago":"valor"}); cosip_m["tipo"] = "COSIP"
 
 df_ev = pd.concat([iss_m, itbi_m, cosip_m]).sort_values("competencia")

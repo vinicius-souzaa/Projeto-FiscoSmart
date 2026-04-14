@@ -140,6 +140,121 @@ class InsightsEngine:
             "valor_impacto": round(aberto, 2),
         }]
 
+    def insight_cnpj_baixado_com_divida(self) -> list[dict]:
+        """
+        Detecta empresas com CNPJ baixado/suspenso que ainda possuem
+        dívida ativa em aberto — alto risco de crédito irrecuperável.
+        """
+        if "situacao_cnpj" not in self.contribs.columns:
+            return []
+        baixados = self.contribs[
+            self.contribs["situacao_cnpj"].isin(["Baixado", "Suspenso"])
+        ]["id_contribuinte"].astype(int)
+        if len(baixados) == 0:
+            return []
+        da_baixados = self.da[
+            self.da["id_contribuinte"].isin(baixados) &
+            (self.da["situacao"] == "Em aberto")
+        ]
+        if len(da_baixados) == 0:
+            return []
+        valor_em_risco = da_baixados["valor_total"].sum()
+        n = len(da_baixados["id_contribuinte"].dropna().unique())
+        return [{
+            "tipo": "cnpj_baixado_com_divida",
+            "severidade": "alta",
+            "titulo": f"{n} empresas baixadas com dívida ativa em aberto",
+            "texto": (
+                f"{n} contribuintes com CNPJ baixado ou suspenso possuem "
+                f"{len(da_baixados)} inscrições em dívida ativa ainda em aberto. "
+                f"Valor total em risco de prescrição: {_fmt(valor_em_risco)}. "
+                f"Ação: ajuizamento imediato de execução fiscal antes da decadência "
+                f"(CTN art. 174 — prescrição em 5 anos)."
+            ),
+            "valor_impacto": round(valor_em_risco, 2),
+            "n_contribuintes": n,
+        }]
+
+    def insight_parcelamento_quebrado(self) -> list[dict]:
+        """
+        Identifica contribuintes que iniciaram um parcelamento (REFIS)
+        mas pagaram menos de 20% do acordado — quebra de acordo.
+        Esses devem retornar à fila de execução fiscal.
+        """
+        parcelados = self.da[self.da["situacao"] == "Parcelado"].copy()
+        if len(parcelados) == 0:
+            return []
+        parcelados["pct_pago"] = parcelados["valor_recuperado"] / parcelados["valor_total"]
+        quebrados = parcelados[parcelados["pct_pago"] < 0.20]
+        if len(quebrados) == 0:
+            return []
+        valor_em_risco = quebrados["valor_total"].sum() - quebrados["valor_recuperado"].sum()
+        n = len(quebrados["id_contribuinte"].dropna().unique())
+        return [{
+            "tipo": "parcelamento_quebrado",
+            "severidade": "alta",
+            "titulo": f"{len(quebrados)} parcelamentos com < 20% pago (possível quebra de acordo)",
+            "texto": (
+                f"{len(quebrados)} inscrições classificadas como 'Parcelado' têm menos de 20% "
+                f"do valor quitado — indicativo de acordo descumprido. "
+                f"Saldo devedor em risco: {_fmt(valor_em_risco)}. "
+                f"Contribuintes afetados: {n}. "
+                f"Ação: revisão dos parcelamentos e reinício da execução fiscal para os inadimplentes."
+            ),
+            "valor_impacto": round(valor_em_risco, 2),
+            "n_contribuintes": n,
+        }]
+
+    def insight_iss_intermunicpal(self) -> list[dict]:
+        """
+        Detecta contribuintes com CNAE de serviço presencial (restaurantes, saúde,
+        construção civil, educação) que declararam ISS sistematicamente muito abaixo
+        do benchmark — padrão consistente com roteamento de notas fiscais para outro
+        município (art. 3º da LC 116/2003).
+        """
+        # CNAEs tipicamente presenciais (ISS devido no município do estabelecimento)
+        cnaes_presenciais = {"5611-2", "5620-1", "8630-5", "8650-0",
+                             "4120-4", "4330-4", "8511-2", "8512-1", "9311-5"}
+        ultimos_6m = sorted(self.decl["competencia"].unique())[-6:]
+        d6 = self.decl[self.decl["competencia"].isin(ultimos_6m)]
+        d6 = d6[d6["cnae"].isin(cnaes_presenciais)]
+        if len(d6) == 0:
+            return []
+        # Benchmark por CNAE: mediana do setor nos últimos 6 meses
+        bench = d6.groupby("cnae")["iss_recolhido"].median().to_dict()
+        suspeitos = []
+        for cid, grp in d6.groupby("id_contribuinte"):
+            cnae = grp["cnae"].iloc[0]
+            media_indiv = grp["iss_recolhido"].mean()
+            media_setor = bench.get(cnae, 0)
+            if media_setor > 0 and media_indiv < media_setor * 0.25 and grp["omitiu_declaracao"].mean() < 0.5:
+                suspeitos.append({
+                    "id_contribuinte": int(cid),
+                    "cnae": cnae,
+                    "media_declarada": media_indiv,
+                    "benchmark_setor": media_setor,
+                    "razao": media_indiv / media_setor,
+                })
+        if not suspeitos:
+            return []
+        df_s = pd.DataFrame(suspeitos)
+        gap_pot = ((df_s["benchmark_setor"] - df_s["media_declarada"]) * 6).sum()
+        n = len(df_s)
+        return [{
+            "tipo": "iss_intermunicipal",
+            "severidade": "media",
+            "titulo": f"{n} contribuintes com ISS < 25% do benchmark do setor (possível roteamento intermunicipal)",
+            "texto": (
+                f"{n} contribuintes de setores tipicamente presenciais (restaurantes, saúde, "
+                f"construção, educação) declararam ISS inferior a 25% da mediana do setor. "
+                f"Padrão consistente com emissão de NFS-e em outro município (art. 3º LC 116/2003). "
+                f"Potencial de recuperação nos últimos 6 meses: {_fmt(gap_pot)}. "
+                f"Ação: solicitar cópia das NFS-e emitidas e verificar local do estabelecimento."
+            ),
+            "valor_impacto": round(gap_pot, 2),
+            "n_contribuintes": n,
+        }]
+
     def insight_anomalias_isolation_forest(self) -> list[dict]:
         if self.scores is None:
             return []
@@ -247,6 +362,9 @@ class InsightsEngine:
             + self.insight_inadimplencia_bairro()
             + self.insight_subavaliacao_itbi()
             + self.insight_divida_ativa()
+            + self.insight_cnpj_baixado_com_divida()       # novo
+            + self.insight_parcelamento_quebrado()          # novo
+            + self.insight_iss_intermunicpal()              # novo
             + self.insight_anomalias_isolation_forest()
         )
         sev_ord = {"alta": 0, "media": 1, "baixa": 2}

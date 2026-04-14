@@ -8,7 +8,8 @@ import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
 import plotly.express as px
-import joblib, os, sys
+import joblib, os, sys, io
+from datetime import date
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, ROOT)
@@ -134,12 +135,13 @@ with hcol3:
 
 # ── ABAS ──────────────────────────────────────────────────────────────────────
 st.markdown("---")
-aba1, aba2, aba3, aba4, aba5 = st.tabs([
+aba1, aba2, aba3, aba4, aba5, aba6 = st.tabs([
     "📊 Declarações ISS",
     "💳 Pagamentos",
     "⚖️ Dívida Ativa",
     "🔍 Ações Fiscais",
     "🤖 Explicação do Score",
+    "📄 Gerar Notificação",
 ])
 
 # ── ABA 1: DECLARAÇÕES ────────────────────────────────────────────────────────
@@ -296,3 +298,200 @@ with aba5:
                 f"**Resumo para auto de infração:** Score {score_val:.0f}/100 "
                 f"justificado principalmente por: {fatores}."
             )
+
+# ── ABA 6: GERAR NOTIFICAÇÃO (PDF / TXT) ─────────────────────────────────────
+with aba6:
+    st.markdown("#### Gerar Notificação Fiscal Preliminar")
+    st.caption(
+        "Gera um documento de notificação pré-preenchido com os dados do contribuinte, "
+        "score de risco, principais fatores de risco e base legal. Pode ser exportado "
+        "como arquivo texto para impressão ou envio por e-mail."
+    )
+
+    if len(sc) == 0:
+        st.warning("Score não disponível — rode setup.py para gerar o modelo.")
+    else:
+        score_val = sc.iloc[0]["score_risco"]
+        faixa     = str(sc.iloc[0]["faixa_risco"])
+
+        # Configurações da notificação
+        nc1, nc2 = st.columns(2)
+        with nc1:
+            tipo_notif = st.selectbox("Tipo de notificação", [
+                "Notificação Prévia de Lançamento",
+                "Auto de Infração (ISS)",
+                "Intimação para Apresentação de Documentos",
+                "Aviso de Débito — Dívida Ativa",
+            ])
+            n_numero = st.text_input("Número do documento", value=f"NF-{cid:05d}-{date.today().year}")
+        with nc2:
+            prazo_dias = st.number_input("Prazo para resposta (dias)", 5, 30, 15)
+            auditor_nome = st.text_input("Nome do auditor responsável", value="Auditor Fiscal")
+
+        # Montar conteúdo
+        gap_12m = dc["gap_absoluto"].sum() if len(dc) > 0 else 0
+        iss_12m  = dc["iss_recolhido"].sum() if len(dc) > 0 else 0
+
+        # Top 3 fatores de risco
+        top3_txt = ""
+        if len(sh) > 0:
+            FEAT_LABELS_SHORT = {
+                "shap_gap_medio_pct":          "gap médio declarado acima do benchmark setorial",
+                "shap_taxa_omissao":           "omissões sistemáticas de declaração",
+                "shap_gap_vs_bench_pct":       "receita declarada abaixo da média do setor",
+                "shap_meses_sem_fiscalizacao": "longo período sem fiscalização",
+                "shap_cv_receita":             "alta variabilidade da receita declarada",
+                "shap_slope_receita_norm":     "tendência de queda na receita declarada",
+                "shap_taxa_retificacao":       "frequência elevada de retificações",
+                "shap_n_acoes_historicas":     "histórico de ações fiscais anteriores",
+                "shap_porte_num":              "porte da empresa",
+                "shap_regime_num":             "regime tributário",
+                "shap_razao_ultimo_media":     "último mês com receita muito inferior à média",
+                "shap_gap_std":                "instabilidade no padrão de declaração",
+                "shap_n_meses_com_dados":      "irregularidade na entrega de declarações",
+                "shap_nunca_fiscalizado":      "nunca foi submetido a fiscalização",
+            }
+            shap_cols = [col for col in sh.columns if col.startswith("shap_")]
+            shap_ind  = sh[shap_cols].iloc[0]
+            shap_df_n = pd.DataFrame({"feature": shap_ind.index, "shap": shap_ind.values})
+            top3_fatores = shap_df_n[shap_df_n["shap"] > 0].sort_values("shap", ascending=False).head(3)
+            linhas = []
+            for i, (_, row) in enumerate(top3_fatores.iterrows(), 1):
+                desc = FEAT_LABELS_SHORT.get(row["feature"], row["feature"])
+                linhas.append(f"   {i}. {desc.capitalize()} (contribuição: {row['shap']:+.3f})")
+            top3_txt = "\n".join(linhas)
+
+        vencimento_notif = date.today().replace(
+            day=min(date.today().day + prazo_dias, 28)
+        )
+
+        notificacao = f"""
+================================================================================
+          PREFEITURA MUNICIPAL DE SÃO VICENTE — ESTADO DE SÃO PAULO
+                       SECRETARIA MUNICIPAL DE FINANÇAS
+                      DEPARTAMENTO DE FISCALIZAÇÃO TRIBUTÁRIA
+================================================================================
+                        {tipo_notif.upper()}
+================================================================================
+
+Número: {n_numero}          Data: {date.today().strftime('%d/%m/%Y')}
+Auditor Fiscal Responsável: {auditor_nome}
+
+CONTRIBUINTE / PESSOA JURÍDICA:
+--------------------------------------------------------------------------------
+Razão Social:  {c['razao_social']}
+CNPJ:          {c['cnpj']}
+Atividade:     {c.get('desc_cnae', c['cnae'])} (CNAE {c['cnae']})
+Regime:        {c.get('regime_tributario', 'N/D')}
+Bairro:        {c.get('bairro', 'N/D')} — São Vicente/SP
+
+ANÁLISE DE RISCO FISCAL (Sistema FiscoSmart — IA):
+--------------------------------------------------------------------------------
+Score de Risco:    {score_val:.0f}/100 — Faixa: {faixa.upper()}
+ISS Recolhido (12m): {_fmt(iss_12m)}
+Gap Estimado (12m):  {_fmt(gap_12m)}  (diferença entre estimado e declarado)
+
+Principais indicadores de risco identificados pelo sistema:
+{top3_txt if top3_txt else '   (dados de explicabilidade não disponíveis)'}
+
+FUNDAMENTAÇÃO LEGAL:
+--------------------------------------------------------------------------------
+O lançamento e/ou a presente notificação têm como fundamento:
+  - Lei Complementar nº 116/2003 (Lei Geral do ISS — arts. 1º, 7º e 12)
+  - Código Tributário Nacional — arts. 142, 148 e 173
+  - Decreto Municipal nº ____/_____ (Regulamento do ISSQN)
+  - Portaria SMF nº ____/_____ (Procedimento de fiscalização eletrônica)
+
+PROVIDÊNCIAS REQUERIDAS:
+--------------------------------------------------------------------------------
+O contribuinte acima identificado fica INTIMADO a, no prazo de {prazo_dias} ({"quinze" if prazo_dias == 15 else str(prazo_dias)}) dias
+corridos a contar do recebimento desta notificação (até {vencimento_notif.strftime('%d/%m/%Y')}),
+apresentar-se junto à Secretaria Municipal de Finanças — Fiscalização Tributária,
+munido dos seguintes documentos:
+
+  1. Livros fiscais e declarações PGDAS-D dos últimos 36 meses
+  2. Notas fiscais de serviços emitidas e recebidas no período
+  3. Extratos bancários das contas utilizadas para movimentação empresarial
+  4. Contratos de prestação de serviços vigentes
+  5. Demonstrativos contábeis (DRE, Balanço) dos últimos 3 exercícios
+
+A não apresentação no prazo legal implicará em lançamento de ofício, conforme
+art. 149, VI, do CTN, com aplicação de multa de 75% (setenta e cinco por cento)
+sobre o valor do imposto apurado, acrescida de juros de mora de 1% a.m.
+
+CIÊNCIA DO CONTRIBUINTE:
+--------------------------------------------------------------------------------
+Recebi em: ____/____/________     Assinatura: ____________________________
+
+                              São Vicente, {date.today().strftime('%d de %B de %Y')}
+
+                              ____________________________
+                              {auditor_nome}
+                              Auditor Fiscal Municipal
+                              Matrícula: _________________
+================================================================================
+Documento gerado pelo sistema FiscoSmart — uso exclusivo da Secretaria de Finanças
+================================================================================
+"""
+
+        st.code(notificacao, language=None)
+
+        # Exportar como arquivo de texto (UTF-8, imprimível)
+        buf_txt = io.BytesIO(notificacao.encode("utf-8"))
+        st.download_button(
+            label=f"⬇️ Baixar notificação ({n_numero})",
+            data=buf_txt,
+            file_name=f"notificacao_{n_numero.replace('/','_').replace('-','_')}.txt",
+            mime="text/plain",
+        )
+
+        # Opção PDF (requer reportlab)
+        try:
+            from reportlab.lib.pagesizes import A4
+            from reportlab.lib.units import cm
+            from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+            from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, HRFlowable, Table, TableStyle
+            from reportlab.lib import colors
+            from reportlab.lib.enums import TA_CENTER, TA_LEFT
+
+            def gerar_pdf(texto_notif: str) -> bytes:
+                buf_pdf = io.BytesIO()
+                doc = SimpleDocTemplate(buf_pdf, pagesize=A4,
+                                        leftMargin=2.5*cm, rightMargin=2.5*cm,
+                                        topMargin=2*cm, bottomMargin=2*cm)
+                styles = getSampleStyleSheet()
+                estilo_mono = ParagraphStyle(
+                    "mono", parent=styles["Normal"],
+                    fontName="Courier", fontSize=8, leading=11,
+                    spaceAfter=2,
+                )
+                estilo_titulo = ParagraphStyle(
+                    "titulo", parent=styles["Heading1"],
+                    fontSize=11, alignment=TA_CENTER, spaceAfter=8,
+                    textColor=colors.HexColor("#1a4f82"),
+                )
+                story = []
+                story.append(Paragraph("PREFEITURA MUNICIPAL DE SÃO VICENTE", estilo_titulo))
+                story.append(Paragraph("Secretaria Municipal de Finanças — Fiscalização Tributária", estilo_titulo))
+                story.append(HRFlowable(width="100%", thickness=1, color=colors.HexColor("#1a4f82")))
+                story.append(Spacer(1, 8))
+                for linha in texto_notif.strip().split("\n"):
+                    if linha.strip().startswith("=="):
+                        story.append(HRFlowable(width="100%", thickness=0.5, color=colors.grey))
+                    elif linha.strip().startswith("--"):
+                        story.append(HRFlowable(width="100%", thickness=0.3, color=colors.lightgrey))
+                    else:
+                        story.append(Paragraph(linha.replace(" ", "&nbsp;"), estilo_mono))
+                doc.build(story)
+                buf_pdf.seek(0)
+                return buf_pdf.read()
+
+            pdf_bytes = gerar_pdf(notificacao)
+            st.download_button(
+                label=f"⬇️ Baixar notificação PDF ({n_numero})",
+                data=pdf_bytes,
+                file_name=f"notificacao_{n_numero.replace('/','_').replace('-','_')}.pdf",
+                mime="application/pdf",
+            )
+        except ImportError:
+            st.caption("Para exportar em PDF, instale: `pip install reportlab`")

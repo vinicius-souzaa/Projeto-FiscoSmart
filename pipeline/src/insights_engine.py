@@ -1,19 +1,23 @@
 """
-FiscoSmart — Motor de Insights Automáticos
-Combina regras determinísticas + Isolation Forest + linguagem natural
+FiscoSmart — Motor de Insights Automáticos v2
+Combina regras determinísticas + Isolation Forest
+
+FIX v2:
+  - __main__ agora salva insights_latest.json em data/processed/ (fix setup.py)
+  - Adicionado try/except robusto no carregamento de scores
 """
 import pandas as pd
 import numpy as np
-import os
+from datetime import date, timedelta
+import os, json
 from sklearn.ensemble import IsolationForest
-from datetime import date
 
 DATA_RAW  = os.path.join(os.path.dirname(__file__), '..', 'data', 'raw')
 DATA_PROC = os.path.join(os.path.dirname(__file__), '..', 'data', 'processed')
 
 
-def _fmt_brl(valor: float) -> str:
-    return f"R$ {valor:,.0f}".replace(",", "X").replace(".", ",").replace("X", ".")
+def _fmt(v: float) -> str:
+    return f"R$ {v:,.0f}".replace(",","X").replace(".",",").replace("X",".")
 
 
 class InsightsEngine:
@@ -30,119 +34,81 @@ class InsightsEngine:
         except FileNotFoundError:
             self.scores = None
 
-    # ─── INSIGHTS ISS ────────────────────────────────────────────────────────
-
     def insight_gap_setor(self) -> list[dict]:
-        """Setores com gap de arrecadação sistemático"""
         ultimos_3m = sorted(self.decl["competencia"].unique())[-3:]
         d3 = self.decl[self.decl["competencia"].isin(ultimos_3m)]
-        gap_cnae = (
-            d3.groupby("cnae")
+        gap_cnae = (d3.groupby("cnae")
             .agg(gap_medio=("gap_percentual","mean"), valor_gap=("gap_absoluto","sum"), n=("id_contribuinte","count"))
-            .reset_index()
-        )
-        insights = []
+            .reset_index())
+        out = []
         for _, r in gap_cnae[gap_cnae["gap_medio"] > 35].iterrows():
-            desc = self.decl[self.decl["cnae"]==r["cnae"]]["cnae"].count()
-            insights.append({
+            out.append({
                 "tipo": "gap_setor",
                 "severidade": "alta" if r["gap_medio"] > 50 else "media",
                 "cnae": r["cnae"],
                 "titulo": f"Gap elevado no setor {r['cnae']}",
-                "texto": (
-                    f"O setor {r['cnae']} apresentou gap médio de {r['gap_medio']:.1f}% "
-                    f"nos últimos 3 meses. Valor potencial não recolhido: {_fmt_brl(r['valor_gap'])}. "
-                    f"Recomenda-se revisão das declarações do setor."
-                ),
+                "texto": (f"O setor {r['cnae']} apresentou gap médio de {r['gap_medio']:.1f}% "
+                          f"nos últimos 3 meses. Potencial não recolhido: {_fmt(r['valor_gap'])}. "
+                          f"Recomenda-se revisão das declarações do setor."),
                 "valor_impacto": round(r["valor_gap"], 2),
             })
-        return insights
+        return out
 
     def insight_omissoes_consecutivas(self) -> list[dict]:
-        """Contribuintes com 2+ meses consecutivos sem declaração"""
         ultimos_6m = sorted(self.decl["competencia"].unique())[-6:]
         d6 = self.decl[self.decl["competencia"].isin(ultimos_6m)]
-        omissoes = (
-            d6.groupby("id_contribuinte")["omitiu_declaracao"]
-            .sum()
-            .reset_index()
-            .rename(columns={"omitiu_declaracao":"total_omissoes"})
-        )
+        omissoes = (d6.groupby("id_contribuinte")["omitiu_declaracao"]
+            .sum().reset_index().rename(columns={"omitiu_declaracao":"total_omissoes"}))
         criticos = omissoes[omissoes["total_omissoes"] >= 2]
         if len(criticos) == 0:
             return []
-        merged = criticos.merge(self.contribs[["id_contribuinte","cnae","porte"]], on="id_contribuinte")
-        merged2 = merged.merge(
-            d6.groupby("id_contribuinte")["iss_devido_estimado"].mean().reset_index(),
-            on="id_contribuinte"
-        )
-        valor_risco = merged2["iss_devido_estimado"].sum() * merged2["total_omissoes"].mean()
+        merged = (criticos
+            .merge(self.contribs[["id_contribuinte","cnae","porte"]], on="id_contribuinte")
+            .merge(d6.groupby("id_contribuinte")["iss_devido_estimado"].mean().reset_index(), on="id_contribuinte"))
+        valor_risco = merged["iss_devido_estimado"].sum() * merged["total_omissoes"].mean()
         return [{
-            "tipo": "omissoes_consecutivas",
-            "severidade": "alta",
+            "tipo": "omissoes_consecutivas", "severidade": "alta",
             "titulo": f"{len(criticos)} contribuintes com omissão recorrente",
-            "texto": (
-                f"{len(criticos)} contribuintes omitiram declaração em 2 ou mais dos últimos 6 meses. "
-                f"Valor potencial em risco estimado: {_fmt_brl(valor_risco)}. "
-                f"Ação recomendada: notificação prévia imediata."
-            ),
+            "texto": (f"{len(criticos)} contribuintes omitiram em 2+ dos últimos 6 meses. "
+                      f"Valor em risco: {_fmt(valor_risco)}. Ação: notificação prévia imediata."),
             "valor_impacto": round(valor_risco, 2),
         }]
 
     def insight_queda_arrecadacao_anomala(self) -> list[dict]:
-        """Detecta quedas de arrecadação que não são explicadas pela sazonalidade"""
-        mensal = (
-            self.decl.groupby(["competencia","mes"])["iss_recolhido"]
-            .sum()
-            .reset_index()
-            .sort_values("competencia")
-        )
+        mensal = (self.decl.groupby(["competencia","mes"])["iss_recolhido"]
+            .sum().reset_index().sort_values("competencia"))
         if len(mensal) < 13:
             return []
         mensal["media_mesmo_mes"] = mensal.groupby("mes")["iss_recolhido"].transform("mean")
-        mensal["desvio_sazonal"] = (mensal["iss_recolhido"] - mensal["media_mesmo_mes"]) / mensal["media_mesmo_mes"] * 100
+        mensal["desvio_sazonal"]  = (mensal["iss_recolhido"] - mensal["media_mesmo_mes"]) / mensal["media_mesmo_mes"] * 100
         ultimo = mensal.iloc[-1]
         if ultimo["desvio_sazonal"] < -15:
             return [{
-                "tipo": "queda_anomala",
-                "severidade": "alta",
+                "tipo": "queda_anomala", "severidade": "alta",
                 "titulo": f"Queda anômala de ISS em {ultimo['competencia']}",
-                "texto": (
-                    f"A arrecadação de ISS em {ultimo['competencia']} ficou {abs(ultimo['desvio_sazonal']):.1f}% "
-                    f"abaixo da média histórica para o mesmo mês. "
-                    f"Essa queda não é explicada pela sazonalidade esperada. "
-                    f"Investigação recomendada."
-                ),
+                "texto": (f"Arrecadação {abs(ultimo['desvio_sazonal']):.1f}% abaixo da média histórica "
+                          f"para o mesmo mês. Queda não explicada por sazonalidade. Investigação recomendada."),
                 "valor_impacto": round(abs(ultimo["iss_recolhido"] - ultimo["media_mesmo_mes"]), 2),
             }]
         return []
 
-    # ─── INSIGHTS IPTU ───────────────────────────────────────────────────────
-
     def insight_inadimplencia_bairro(self) -> list[dict]:
-        inad = self.imoveis.groupby("bairro").agg(
-            total=("id_imovel","count"),
-            inadimplentes=("inadimplente","sum"),
-            valor_em_atraso=("iptu_lancado","sum"),
-        ).reset_index()
+        inad = (self.imoveis.groupby("bairro")
+            .agg(total=("id_imovel","count"), inadimplentes=("inadimplente","sum"),
+                 valor_em_atraso=("iptu_lancado","sum"))
+            .reset_index())
         inad["taxa_inad"] = inad["inadimplentes"] / inad["total"] * 100
-        criticos = inad[inad["taxa_inad"] > 30].sort_values("taxa_inad", ascending=False)
-        insights = []
-        for _, r in criticos.iterrows():
-            insights.append({
-                "tipo": "inadimplencia_iptu",
-                "severidade": "media",
-                "titulo": f"Alta inadimplência de IPTU — {r['bairro']}",
-                "texto": (
-                    f"O bairro {r['bairro']} tem {r['taxa_inad']:.1f}% de inadimplência no IPTU "
-                    f"({r['inadimplentes']:.0f} de {r['total']:.0f} imóveis). "
-                    f"Valor em atraso estimado: {_fmt_brl(r['valor_em_atraso'] * r['taxa_inad']/100)}."
-                ),
+        out = []
+        for _, r in inad[inad["taxa_inad"] > 30].sort_values("taxa_inad", ascending=False).iterrows():
+            out.append({
+                "tipo": "inadimplencia_iptu", "severidade": "media",
+                "titulo": f"Alta inadimplência IPTU — {r['bairro']}",
+                "texto": (f"{r['bairro']}: {r['taxa_inad']:.1f}% inadimplência "
+                          f"({r['inadimplentes']:.0f}/{r['total']:.0f} imóveis). "
+                          f"Valor em atraso: {_fmt(r['valor_em_atraso'] * r['taxa_inad']/100)}."),
                 "valor_impacto": round(r["valor_em_atraso"] * r["taxa_inad"] / 100, 2),
             })
-        return insights
-
-    # ─── INSIGHTS ITBI ───────────────────────────────────────────────────────
+        return out
 
     def insight_subavaliacao_itbi(self) -> list[dict]:
         sub = self.itbi[self.itbi["subavaliacao_detectada"] == 1]
@@ -151,103 +117,272 @@ class InsightsEngine:
         gap_total = sub["gap_itbi"].sum()
         pct = len(sub) / len(self.itbi) * 100
         return [{
-            "tipo": "subavaliacao_itbi",
-            "severidade": "media",
-            "titulo": f"Subavaliação detectada em {len(sub)} transações de ITBI",
-            "texto": (
-                f"{pct:.1f}% das transações imobiliárias ({len(sub)} escrituras) apresentam "
-                f"valor declarado abaixo do valor venal do IPTU. "
-                f"Gap de ITBI não recolhido estimado: {_fmt_brl(gap_total)}. "
-                f"Recomenda-se arbitramento da base de cálculo nos casos identificados."
-            ),
+            "tipo": "subavaliacao_itbi", "severidade": "media",
+            "titulo": f"Subavaliação em {len(sub)} transações ITBI",
+            "texto": (f"{pct:.1f}% das escrituras ({len(sub)}) com valor abaixo do venal IPTU. "
+                      f"Gap ITBI estimado: {_fmt(gap_total)}. "
+                      f"Recomenda-se arbitramento da base de cálculo."),
             "valor_impacto": round(gap_total, 2),
         }]
 
-    # ─── INSIGHTS DÍVIDA ATIVA ───────────────────────────────────────────────
-
     def insight_divida_ativa(self) -> list[dict]:
-        total_da = self.da["valor_total"].sum()
-        recuperado = self.da["valor_recuperado"].sum()
-        tx_recup = recuperado / total_da * 100 if total_da > 0 else 0
-        em_aberto = self.da[self.da["situacao"] == "Em aberto"]["valor_total"].sum()
+        total = self.da["valor_total"].sum()
+        rec   = self.da["valor_recuperado"].sum()
+        tx    = rec / total * 100 if total > 0 else 0
+        aberto = self.da[self.da["situacao"] == "Em aberto"]["valor_total"].sum()
         return [{
             "tipo": "divida_ativa",
-            "severidade": "alta" if tx_recup < 20 else "media",
-            "titulo": f"Taxa de recuperação de dívida ativa: {tx_recup:.1f}%",
-            "texto": (
-                f"Estoque total da dívida ativa: {_fmt_brl(total_da)}. "
-                f"Valor em aberto (sem parcelamento): {_fmt_brl(em_aberto)}. "
-                f"Taxa de recuperação histórica: {tx_recup:.1f}%. "
-                + ("Abaixo da média nacional de 25% — recomenda-se campanha de renegociação." if tx_recup < 25 else "")
-            ),
-            "valor_impacto": round(em_aberto, 2),
+            "severidade": "alta" if tx < 20 else "media",
+            "titulo": f"Taxa de recuperação da dívida ativa: {tx:.1f}%",
+            "texto": (f"Estoque total: {_fmt(total)}. Em aberto: {_fmt(aberto)}. "
+                      f"Taxa de recuperação: {tx:.1f}%."
+                      + (" Abaixo da média nacional (25%) — recomenda-se REFIS municipal." if tx < 25 else "")),
+            "valor_impacto": round(aberto, 2),
         }]
 
-    # ─── INSIGHT ANOMALIAS (Isolation Forest) ────────────────────────────────
+    def insight_cnpj_baixado_com_divida(self) -> list[dict]:
+        """
+        Detecta empresas com CNPJ baixado/suspenso que ainda possuem
+        dívida ativa em aberto — alto risco de crédito irrecuperável.
+        """
+        if "situacao_cnpj" not in self.contribs.columns:
+            return []
+        baixados = self.contribs[
+            self.contribs["situacao_cnpj"].isin(["Baixado", "Suspenso"])
+        ]["id_contribuinte"].astype(int)
+        if len(baixados) == 0:
+            return []
+        da_baixados = self.da[
+            self.da["id_contribuinte"].isin(baixados) &
+            (self.da["situacao"] == "Em aberto")
+        ]
+        if len(da_baixados) == 0:
+            return []
+        valor_em_risco = da_baixados["valor_total"].sum()
+        n = len(da_baixados["id_contribuinte"].dropna().unique())
+        return [{
+            "tipo": "cnpj_baixado_com_divida",
+            "severidade": "alta",
+            "titulo": f"{n} empresas baixadas com dívida ativa em aberto",
+            "texto": (
+                f"{n} contribuintes com CNPJ baixado ou suspenso possuem "
+                f"{len(da_baixados)} inscrições em dívida ativa ainda em aberto. "
+                f"Valor total em risco de prescrição: {_fmt(valor_em_risco)}. "
+                f"Ação: ajuizamento imediato de execução fiscal antes da decadência "
+                f"(CTN art. 174 — prescrição em 5 anos)."
+            ),
+            "valor_impacto": round(valor_em_risco, 2),
+            "n_contribuintes": n,
+        }]
+
+    def insight_parcelamento_quebrado(self) -> list[dict]:
+        """
+        Identifica contribuintes que iniciaram um parcelamento (REFIS)
+        mas pagaram menos de 20% do acordado — quebra de acordo.
+        Esses devem retornar à fila de execução fiscal.
+        """
+        parcelados = self.da[self.da["situacao"] == "Parcelado"].copy()
+        if len(parcelados) == 0:
+            return []
+        parcelados["pct_pago"] = parcelados["valor_recuperado"] / parcelados["valor_total"]
+        quebrados = parcelados[parcelados["pct_pago"] < 0.20]
+        if len(quebrados) == 0:
+            return []
+        valor_em_risco = quebrados["valor_total"].sum() - quebrados["valor_recuperado"].sum()
+        n = len(quebrados["id_contribuinte"].dropna().unique())
+        return [{
+            "tipo": "parcelamento_quebrado",
+            "severidade": "alta",
+            "titulo": f"{len(quebrados)} parcelamentos com < 20% pago (possível quebra de acordo)",
+            "texto": (
+                f"{len(quebrados)} inscrições classificadas como 'Parcelado' têm menos de 20% "
+                f"do valor quitado — indicativo de acordo descumprido. "
+                f"Saldo devedor em risco: {_fmt(valor_em_risco)}. "
+                f"Contribuintes afetados: {n}. "
+                f"Ação: revisão dos parcelamentos e reinício da execução fiscal para os inadimplentes."
+            ),
+            "valor_impacto": round(valor_em_risco, 2),
+            "n_contribuintes": n,
+        }]
+
+    def insight_iss_intermunicpal(self) -> list[dict]:
+        """
+        Detecta contribuintes com CNAE de serviço presencial (restaurantes, saúde,
+        construção civil, educação) que declararam ISS sistematicamente muito abaixo
+        do benchmark — padrão consistente com roteamento de notas fiscais para outro
+        município (art. 3º da LC 116/2003).
+        """
+        # CNAEs tipicamente presenciais (ISS devido no município do estabelecimento)
+        cnaes_presenciais = {"5611-2", "5620-1", "8630-5", "8650-0",
+                             "4120-4", "4330-4", "8511-2", "8512-1", "9311-5"}
+        ultimos_6m = sorted(self.decl["competencia"].unique())[-6:]
+        d6 = self.decl[self.decl["competencia"].isin(ultimos_6m)]
+        d6 = d6[d6["cnae"].isin(cnaes_presenciais)]
+        if len(d6) == 0:
+            return []
+        # Benchmark por CNAE: mediana do setor nos últimos 6 meses
+        bench = d6.groupby("cnae")["iss_recolhido"].median().to_dict()
+        suspeitos = []
+        for cid, grp in d6.groupby("id_contribuinte"):
+            cnae = grp["cnae"].iloc[0]
+            media_indiv = grp["iss_recolhido"].mean()
+            media_setor = bench.get(cnae, 0)
+            if media_setor > 0 and media_indiv < media_setor * 0.25 and grp["omitiu_declaracao"].mean() < 0.5:
+                suspeitos.append({
+                    "id_contribuinte": int(cid),
+                    "cnae": cnae,
+                    "media_declarada": media_indiv,
+                    "benchmark_setor": media_setor,
+                    "razao": media_indiv / media_setor,
+                })
+        if not suspeitos:
+            return []
+        df_s = pd.DataFrame(suspeitos)
+        gap_pot = ((df_s["benchmark_setor"] - df_s["media_declarada"]) * 6).sum()
+        n = len(df_s)
+        return [{
+            "tipo": "iss_intermunicipal",
+            "severidade": "media",
+            "titulo": f"{n} contribuintes com ISS < 25% do benchmark do setor (possível roteamento intermunicipal)",
+            "texto": (
+                f"{n} contribuintes de setores tipicamente presenciais (restaurantes, saúde, "
+                f"construção, educação) declararam ISS inferior a 25% da mediana do setor. "
+                f"Padrão consistente com emissão de NFS-e em outro município (art. 3º LC 116/2003). "
+                f"Potencial de recuperação nos últimos 6 meses: {_fmt(gap_pot)}. "
+                f"Ação: solicitar cópia das NFS-e emitidas e verificar local do estabelecimento."
+            ),
+            "valor_impacto": round(gap_pot, 2),
+            "n_contribuintes": n,
+        }]
 
     def insight_anomalias_isolation_forest(self) -> list[dict]:
         if self.scores is None:
             return []
         feats = ["gap_medio_pct","taxa_omissao","gap_vs_bench_pct","meses_sem_fiscalizacao"]
-        df = self.scores.dropna(subset=feats)
-        iso = IsolationForest(contamination=0.05, random_state=42)
-        df = df.copy()
-        df["anomalia"] = iso.fit_predict(df[feats])
+        df = self.scores.dropna(subset=feats).copy()
+        df["anomalia"] = IsolationForest(contamination=0.05, random_state=42).fit_predict(df[feats])
         anomalos = df[df["anomalia"] == -1]
         if len(anomalos) == 0:
             return []
-        valor_pot = anomalos["receita_media_12m"].sum() * 0.03 * 0.40  # estimativa conservadora
+        valor_pot = anomalos["receita_media_12m"].sum() * 0.03 * 0.40
         return [{
-            "tipo": "anomalia_isolation_forest",
-            "severidade": "alta",
-            "titulo": f"{len(anomalos)} contribuintes com comportamento atípico detectado",
-            "texto": (
-                f"O modelo de detecção de anomalias identificou {len(anomalos)} contribuintes "
-                f"com padrão fiscal estatisticamente incomum em relação ao grupo. "
-                f"Esses contribuintes não foram capturados pelos critérios de regra tradicionais. "
-                f"Valor potencial estimado: {_fmt_brl(valor_pot)}."
-            ),
+            "tipo": "anomalia_isolation_forest", "severidade": "alta",
+            "titulo": f"{len(anomalos)} contribuintes com comportamento atípico",
+            "texto": (f"Isolation Forest identificou {len(anomalos)} contribuintes com padrão fiscal "
+                      f"incomum — não capturados pelas regras tradicionais. "
+                      f"Valor potencial estimado: {_fmt(valor_pot)}."),
             "valor_impacto": round(valor_pot, 2),
             "contribuintes_anomalos": anomalos["id_contribuinte"].tolist(),
         }]
 
-    # ─── PRIORIZAÇÃO ─────────────────────────────────────────────────────────
 
-    def gerar_priorizacao(self) -> pd.DataFrame:
-        """Combina score de risco + valor potencial para gerar ranking de fiscalização"""
-        if self.scores is None:
-            return pd.DataFrame()
-        df = self.scores.copy()
-        df["valor_potencial_mensal"] = df["receita_media_12m"] * df["gap_vs_bench_pct"] / 100 * 0.03
-        df["custo_estimado"] = df["porte"].map({"MEI":500,"ME":1200,"EPP":2500,"MD":5000,"GR":12000})
-        df["retorno_esperado"] = (
-            df["valor_potencial_mensal"] * (df["score_risco"] / 100)
-        ) / df["custo_estimado"].clip(lower=100)
-        df["ultima_fiscalizacao_categoria"] = pd.cut(
-            df["meses_sem_fiscalizacao"], bins=[0,6,12,24,999],
-            labels=["<6m","6-12m","12-24m",">24m"]
+    def insight_prazo_da(self) -> list[dict]:
+        """
+        Contribuintes com competência vencida entre 60 e 89 dias sem pagamento:
+        a menos de 30 dias de serem inscritos em dívida ativa automaticamente.
+        Alerta o auditor para agir antes do processo judicial.
+        """
+        pag_path = os.path.join(DATA_RAW, 'pagamentos_iss.csv')
+        if not os.path.exists(pag_path):
+            return []
+
+        try:
+            pag = pd.read_csv(pag_path, usecols=['id_contribuinte','competencia','status'])
+        except Exception:
+            return []
+
+        ja_pagou = set(
+            zip(pag[pag['status'].isin(['pago','pago_atraso'])]['id_contribuinte'].astype(int),
+                pag['competencia'])
         )
-        return df.sort_values("retorno_esperado", ascending=False).head(100)
 
-    # ─── CONSOLIDAR TODOS OS INSIGHTS ────────────────────────────────────────
+        # Chaves já em DA para não duplicar alerta
+        da_chaves = set()
+        if len(self.da) > 0:
+            da_iss = self.da[(self.da['tipo_tributo']=='ISS') & self.da['id_contribuinte'].notna()]
+            da_chaves = set(zip(da_iss['id_contribuinte'].astype(int), da_iss['competencia_origem']))
+
+        hoje = date.today()
+        alertas = []
+
+        for comp in self.decl['competencia'].unique():
+            ano, mes = int(comp[:4]), int(comp[5:7])
+            mes_v = mes + 1; ano_v = ano + (mes_v > 12); mes_v = mes_v % 12 or 12
+            try:
+                venc = date(ano_v, mes_v, 15)
+            except ValueError:
+                continue
+
+            dias_vencido = (hoje - venc).days
+            if not (60 <= dias_vencido <= 89):
+                continue
+
+            dias_para_da = 90 - dias_vencido
+            decl_comp = self.decl[self.decl['competencia'] == comp]
+
+            pendentes = decl_comp[
+                ~decl_comp['id_contribuinte'].isin(
+                    [c for c, cp in ja_pagou if cp == comp]
+                ) &
+                ~decl_comp['id_contribuinte'].isin(
+                    [c for c, cp in da_chaves if cp == comp]
+                )
+            ]
+
+            if len(pendentes) == 0:
+                continue
+
+            valor_em_risco = pendentes['iss_devido_estimado'].sum()
+            alertas.append({
+                'tipo': 'prazo_da',
+                'severidade': 'alta' if dias_para_da <= 10 else 'media',
+                'titulo': f"Competência {comp} entra em DA em {dias_para_da} dia(s)",
+                'texto': (
+                    f"{len(pendentes)} contribuintes da competência {comp} ainda não pagaram. "
+                    f"O prazo de tolerância vence em {dias_para_da} dia(s) (dia {venc + timedelta(days=90)}). "
+                    f"Valor em risco de inscrição em dívida ativa: {_fmt(valor_em_risco)}. "
+                    f"Ação: notificação extrajudicial imediata para evitar execução fiscal."
+                ),
+                'valor_impacto': round(valor_em_risco, 2),
+                'competencia': comp,
+                'dias_para_da': dias_para_da,
+                'n_contribuintes': len(pendentes),
+            })
+
+        # Ordenar por urgência (menos dias primeiro)
+        alertas.sort(key=lambda x: x['dias_para_da'])
+        return alertas
 
     def todos_insights(self) -> list[dict]:
-        insights = []
-        insights += self.insight_gap_setor()
-        insights += self.insight_omissoes_consecutivas()
-        insights += self.insight_queda_arrecadacao_anomala()
-        insights += self.insight_inadimplencia_bairro()
-        insights += self.insight_subavaliacao_itbi()
-        insights += self.insight_divida_ativa()
-        insights += self.insight_anomalias_isolation_forest()
-        # Ordenar por severidade e valor de impacto
+        insights = (
+            self.insight_prazo_da()
+            + self.insight_gap_setor()
+            + self.insight_omissoes_consecutivas()
+            + self.insight_queda_arrecadacao_anomala()
+            + self.insight_inadimplencia_bairro()
+            + self.insight_subavaliacao_itbi()
+            + self.insight_divida_ativa()
+            + self.insight_cnpj_baixado_com_divida()       # novo
+            + self.insight_parcelamento_quebrado()          # novo
+            + self.insight_iss_intermunicpal()              # novo
+            + self.insight_anomalias_isolation_forest()
+        )
         sev_ord = {"alta": 0, "media": 1, "baixa": 2}
-        insights.sort(key=lambda x: (sev_ord.get(x["severidade"],2), -x.get("valor_impacto",0)))
+        insights.sort(key=lambda x: (sev_ord.get(x["severidade"], 2), -x.get("valor_impacto", 0)))
         return insights
 
 
+# FIX: __main__ agora salva o JSON (setup.py chama este script via subprocess)
 if __name__ == "__main__":
-    eng = InsightsEngine()
-    for ins in eng.todos_insights():
-        print(f"[{ins['severidade'].upper()}] {ins['titulo']}")
-        print(f"  {ins['texto']}\n")
+    import os as _os
+    eng      = InsightsEngine()
+    insights = eng.todos_insights()
+
+    out_path = _os.path.join(_os.path.dirname(__file__), '..', 'data', 'processed', 'insights_latest.json')
+    _os.makedirs(_os.path.dirname(out_path), exist_ok=True)
+    with open(out_path, "w", encoding="utf-8") as f:
+        json.dump(insights, f, ensure_ascii=False, indent=2, default=str)
+
+    print(f"  {len(insights)} insights gerados → {out_path}")
+    for ins in insights:
+        print(f"  [{ins['severidade'].upper():5}] {ins['titulo']}")

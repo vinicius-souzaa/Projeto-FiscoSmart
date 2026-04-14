@@ -9,7 +9,7 @@ FIXES v2:
 """
 import pandas as pd
 import numpy as np
-import joblib, os
+import joblib, os, json
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import roc_auc_score, precision_score, recall_score, f1_score
 import xgboost as xgb
@@ -23,8 +23,8 @@ FEATURE_COLS = [
     "porte_num", "regime_num", "gap_medio_pct", "gap_std",
     "taxa_omissao", "taxa_retificacao", "cv_receita",
     "slope_receita_norm", "razao_ultimo_media",
-    "meses_sem_fiscalizacao", "n_acoes_historicas",
-    "gap_vs_bench_pct", "n_meses_com_dados",
+    "meses_sem_fiscalizacao", "nunca_fiscalizado",   # nova feature
+    "n_acoes_historicas", "gap_vs_bench_pct", "n_meses_com_dados",
 ]
 
 
@@ -93,11 +93,30 @@ def treinar_modelo():
     joblib.dump(explainer, f"{MODELS_DIR}/shap_explainer.pkl")
     joblib.dump(metricas,  f"{MODELS_DIR}/metricas_modelo.pkl")
 
+    # FIX: salva bins também em JSON para acesso sem depender do pickle
+    meta = {
+        "bin_medio": round(bin_medio, 2),
+        "bin_alto":  round(bin_alto, 2),
+        "auc_roc":   metricas["auc_roc"],
+        "recall":    metricas["recall"],
+        "precision": metricas["precision"],
+        "f1":        metricas["f1"],
+        "features":  FEATURE_COLS,
+        "gerado_em": str(pd.Timestamp.now()),
+    }
+    with open(f"{DATA_PROC}/model_metadata.json", "w", encoding="utf-8") as f:
+        json.dump(meta, f, ensure_ascii=False, indent=2)
+
     cols_saida = [
         "id_contribuinte", "cnae", "desc_cnae", "porte", "regime_tributario", "bairro",
-        "gap_medio_pct", "taxa_omissao", "meses_sem_fiscalizacao", "gap_vs_bench_pct",
-        "score_risco", "faixa_risco", "irregularidade_confirmada", "receita_media_12m",
+        "gap_medio_pct", "taxa_omissao", "meses_sem_fiscalizacao", "nunca_fiscalizado",
+        "gap_vs_bench_pct", "score_risco", "faixa_risco",
+        "irregularidade_confirmada", "receita_media_12m",
     ]
+    # FIX: inclui bins como colunas no CSV para evitar dependência exclusiva do pickle
+    df["bin_medio"] = round(bin_medio, 2)
+    df["bin_alto"]  = round(bin_alto, 2)
+    cols_saida += ["bin_medio", "bin_alto"]
     df[cols_saida].to_csv(f"{DATA_PROC}/scores_risco.csv", index=False)
 
     dist = df["faixa_risco"].value_counts().to_dict()

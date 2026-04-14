@@ -167,15 +167,20 @@ st.markdown("---")
 # Cards de navegação
 st.markdown("### Módulos do sistema")
 modulos = [
-    ("📊", "Visão Geral",        "KPIs consolidados de todos os tributos e transferências"),
-    ("🔍", "Diagnóstico ISS",    "Gap por setor, omissões, sazonalidade, radar por contribuinte"),
-    ("🏠", "Diagnóstico IPTU",   "Inadimplência por bairro, Pareto, isenções irregulares"),
-    ("📋", "Diagnóstico ITBI",   "Subavaliação de base de cálculo, transações suspeitas"),
-    ("💰", "Taxas e COSIP",      "Alvará, coleta de lixo, iluminação pública, contribuição de melhoria"),
-    ("⚖️", "Dívida Ativa",       "Aging, Pareto, taxa de recuperação, simulador REFIS"),
-    ("🤖", "Score de Risco",     "XGBoost + SHAP global e waterfall individual por contribuinte"),
-    ("📈", "Previsão",           "Prophet por tributo — próximos 6 meses com IC 95% e gap de meta"),
-    ("🎯", "Priorização Fiscal", "Ranking de retorno esperado, simulador top-N, exportação CSV"),
+    ("📊", "Visão Geral",           "KPIs consolidados de todos os tributos e transferências"),
+    ("🔍", "Diagnóstico ISS",       "Gap por setor, omissões, sazonalidade, radar por contribuinte"),
+    ("🏠", "Diagnóstico IPTU",      "Inadimplência por bairro, Pareto, isenções irregulares"),
+    ("📋", "Diagnóstico ITBI",      "Subavaliação de base de cálculo, transações suspeitas"),
+    ("💰", "Taxas e COSIP",         "Alvará, coleta de lixo, iluminação pública, contribuição de melhoria"),
+    ("⚖️", "Dívida Ativa",          "Aging, Pareto, taxa de recuperação, simulador REFIS"),
+    ("🤖", "Score de Risco",        "XGBoost + SHAP global e waterfall individual por contribuinte"),
+    ("📈", "Previsão",              "Prophet por tributo — próximos 6 meses com IC 95% e gap de meta"),
+    ("🎯", "Priorização Fiscal",    "Ranking de retorno esperado, simulador top-N, exportação CSV"),
+    ("🗂️", "Ficha do Contribuinte", "Histórico completo + score + notificação fiscal (PDF)"),
+    ("🗺️", "Mapa de Risco",         "Heatmap geoespacial por bairro — ISS, IPTU, potencial de cobrança"),
+    ("📊", "Benchmark Municipal",   "Comparativo de São Vicente vs. municípios pares do litoral paulista"),
+    ("🔍", "Auditoria de Isenções", "Revisão periódica de isenções IPTU — priorização por risco"),
+    ("🏛️", "Painel Executivo",      "Visão de alto nível para o Secretário de Finanças"),
 ]
 cols = st.columns(3)
 for i, (icon, titulo, desc) in enumerate(modulos):

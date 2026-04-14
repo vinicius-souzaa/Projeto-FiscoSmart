@@ -16,10 +16,16 @@ def build_features():
     decl = pd.read_csv(f"{DATA_RAW}/declaracoes_iss.csv")
     contribs = pd.read_csv(f"{DATA_RAW}/contribuintes.csv")
     acoes = pd.read_csv(f"{DATA_RAW}/acoes_fiscais.csv")
+    acoes["data_acao"] = pd.to_datetime(acoes["data_acao"])
 
     # Só últimos 12 meses para features preditivas
     ultimos_12 = sorted(decl["competencia"].unique())[-12:]
     d12 = decl[decl["competencia"].isin(ultimos_12)]
+
+    # FIX VIÉS TEMPORAL: limite temporal para o target
+    # Só conta ações fiscais anteriores ao fim da janela de features,
+    # evitando que o modelo "veja o futuro" durante o treinamento.
+    fim_janela = pd.Timestamp(ultimos_12[-1] + "-01") + pd.offsets.MonthEnd(0)
 
     feats = []
     for cid in contribs["id_contribuinte"].unique():
@@ -52,18 +58,24 @@ def build_features():
 
         # Meses sem fiscalização
         acoes_c = acoes[acoes["id_contribuinte"] == cid]
-        if len(acoes_c) > 0:
-            ultima_acao = pd.to_datetime(acoes_c["data_acao"]).max()
-            meses_sem_fisc = max(0, (pd.Timestamp.now() - ultima_acao).days // 30)
+
+        # FIX VIÉS TEMPORAL: usa apenas ações ANTES do fim da janela de features
+        acoes_c_hist = acoes_c[acoes_c["data_acao"] <= fim_janela]
+
+        nunca_fiscalizado = int(len(acoes_c_hist) == 0)   # flag binária nova
+        if len(acoes_c_hist) > 0:
+            ultima_acao = acoes_c_hist["data_acao"].max()
+            meses_sem_fisc = max(0, (fim_janela - ultima_acao).days // 30)
         else:
-            meses_sem_fisc = 36
+            # Nunca fiscalizado: valor alto mas separado do flag para o modelo diferenciar
+            meses_sem_fisc = 48
 
         # Porte e regime (encoded)
         porte_map = {"MEI": 1, "ME": 2, "EPP": 3, "MD": 4, "GR": 5}
         regime_map = {"MEI": 1, "Simples Nacional": 2, "Lucro Presumido": 3, "Lucro Real": 4}
 
-        # Irregularidade histórica (target)
-        irr = acoes_c["irregularidade_confirmada"].max() if len(acoes_c) > 0 else 0
+        # FIX VIÉS TEMPORAL: target usa apenas ações dentro da janela histórica
+        irr = acoes_c_hist["irregularidade_confirmada"].max() if len(acoes_c_hist) > 0 else 0
 
         feats.append({
             "id_contribuinte": cid,
@@ -75,6 +87,8 @@ def build_features():
             "regime_num": regime_map.get(c["regime_tributario"], 2),
             "bairro": c["bairro"],
             "risco_latente": c["risco_latente"],
+            # Situação cadastral (se disponível)
+            "situacao_cnpj": c.get("situacao_cnpj", "Ativo"),
             # Features preditivas
             "gap_medio_pct": round(gap_medio, 2),
             "gap_std": round(gap_std, 2),
@@ -85,9 +99,10 @@ def build_features():
             "slope_receita_norm": round(slope_norm, 6),
             "razao_ultimo_media": round(razao_ultimo_media, 4),
             "meses_sem_fiscalizacao": meses_sem_fisc,
-            "n_acoes_historicas": len(acoes_c),
+            "nunca_fiscalizado": nunca_fiscalizado,          # nova feature
+            "n_acoes_historicas": len(acoes_c_hist),
             "n_meses_com_dados": len(cd),
-            # Target
+            # Target (sem lookahead)
             "irregularidade_confirmada": int(irr),
         })
 

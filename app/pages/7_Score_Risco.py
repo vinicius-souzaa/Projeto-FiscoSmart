@@ -122,22 +122,32 @@ st.info(
 )
 
 FEAT_LABELS = {
-    "shap_porte_num": "Porte da empresa",
-    "shap_regime_num": "Regime tributário",
-    "shap_gap_medio_pct": "Gap médio declarado (%)",
-    "shap_gap_std": "Instabilidade do gap",
-    "shap_taxa_omissao": "Taxa de omissão de declarações",
-    "shap_taxa_retificacao": "Frequência de retificações",
-    "shap_cv_receita": "Variabilidade da receita",
-    "shap_slope_receita_norm": "Tendência da receita (crescimento/queda)",
-    "shap_razao_ultimo_media": "Último mês vs. média histórica",
-    "shap_meses_sem_fiscalizacao": "Tempo sem ser fiscalizado",
-    "shap_n_acoes_historicas": "Histórico de ações fiscais",
-    "shap_gap_vs_bench_pct": "Gap vs. benchmark do setor",
-    "shap_n_meses_com_dados": "Regularidade de entregas",
+    "shap_porte_num":              "Porte da empresa",
+    "shap_regime_num":             "Regime tributário",
+    "shap_gap_medio_pct":         "Gap médio declarado (%)",
+    "shap_gap_std":               "Instabilidade do gap",
+    "shap_taxa_omissao":          "Taxa de omissão de declarações",
+    "shap_taxa_retificacao":      "Frequência de retificações",
+    "shap_cv_receita":            "Variabilidade da receita",
+    "shap_slope_receita_norm":    "Tendência da receita (crescimento/queda)",
+    "shap_razao_ultimo_media":    "Último mês vs. média histórica",
+    "shap_meses_sem_fiscalizacao":"Tempo sem ser fiscalizado",
+    "shap_nunca_fiscalizado":     "Nunca foi fiscalizado (flag)",
+    "shap_n_acoes_historicas":    "Histórico de ações fiscais",
+    "shap_gap_vs_bench_pct":      "Gap vs. benchmark do setor",
+    "shap_n_meses_com_dados":     "Regularidade de entregas",
 }
 
 shap_cols = [c for c in shap_v.columns if c.startswith("shap_")]
+
+# Validar FEAT_LABELS contra colunas reais (emite aviso se houver divergência)
+_labels_sem_coluna = [k for k in FEAT_LABELS if k not in shap_cols]
+_colunas_sem_label = [c for c in shap_cols if c != "id_contribuinte" and c not in FEAT_LABELS]
+if _labels_sem_coluna:
+    st.caption(f"⚠️ Labels sem coluna SHAP: {_labels_sem_coluna}")
+if _colunas_sem_label:
+    for c in _colunas_sem_label:
+        FEAT_LABELS[c] = c.replace("shap_", "").replace("_", " ").title()
 imp = shap_v[shap_cols].abs().mean().reset_index()
 imp.columns = ["feature","importancia"]
 imp["label"] = imp["feature"].map(FEAT_LABELS)

@@ -110,6 +110,15 @@ def gerar_contribuintes():
     for i in range(N_CONTRIBUINTES_ISS):
         porte = np.random.choice(PORTES, p=PORTE_PESO)
         cnae = random.choice(cnaes_lista)
+        risco_lat = np.random.choice([0, 1, 2], p=[0.60, 0.25, 0.15])
+        ativo_flag = 1 if random.random() > 0.05 else 0
+        # situacao_cnpj: alguns inativos têm CNPJ baixado (potencial sonegação)
+        if ativo_flag == 0 and random.random() < 0.60:
+            situacao_cnpj = "Baixado"
+        elif random.random() < 0.03:
+            situacao_cnpj = "Suspenso"
+        else:
+            situacao_cnpj = "Ativo"
         rows.append({
             "id_contribuinte": i + 1,
             "cnpj": _cnpj(),
@@ -120,8 +129,9 @@ def gerar_contribuintes():
             "regime_tributario": random.choice(REGIME_POR_PORTE[porte]),
             "bairro": random.choice(BAIRROS),
             "data_abertura": fake.date_between(start_date='-10y', end_date='-6m'),
-            "ativo": 1 if random.random() > 0.05 else 0,
-            "risco_latente": np.random.choice([0, 1, 2], p=[0.60, 0.25, 0.15]),
+            "ativo": ativo_flag,
+            "risco_latente": risco_lat,
+            "situacao_cnpj": situacao_cnpj,
             "email": fake.company_email(),
             "telefone": fake.phone_number(),
         })
